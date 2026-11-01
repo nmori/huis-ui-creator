@@ -128,6 +128,12 @@ Ruby / Compass / Grunt / electron-packager の個別インストールは不要�
     $ npm run package
 
 パッケージングが完了したら、`dist/HUIS UI CREATOR-<platform>-<arch>` ディレクトリーにパッケージングされたものが生成されます (Windows 64bit 向けの場合 `dist/HUIS UI CREATOR-win32-x64`)。
+あわせて、配布用の zip ファイル `dist/huis-ui-creator-<version>-<platform>-<arch>.zip` が生成されます。
+
+配布物には以下が含まれます。
+
+- `licenses/` : HUIS UI CREATOR および同梱しているソフトウェア (Electron / Chromium、ライブラリ、フォント) のライセンス
+- `はじめにお読みください.txt` : 利用者向けの説明 (内容は `build/dist-readme.txt` で編集できます)
 
 ビルドしている環境以外のプラットフォーム・アーキテクチャー向けにパッケージングする場合は、以下のように指定してください。
 

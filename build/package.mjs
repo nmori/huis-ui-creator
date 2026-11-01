@@ -101,3 +101,72 @@ const outputs = await packager({
 for (const output of outputs) {
     log("created " + output);
 }
+
+// 4. 配布用のファイル (ライセンス一式、はじめにお読みください) を追加し、zip にまとめる
+for (const output of outputs) {
+    prepareDistribution(output);
+    const zipPath = path.join(DIST, `${pkg.name}-${pkg.version}-${platform}-${arch}.zip`);
+    await createZip(output, pkg.productName, zipPath);
+    log("created " + zipPath);
+}
+
+/**
+ * パッケージのルートに licenses/ と「はじめにお読みください.txt」を配置する。
+ * Electron が出力する LICENSE (Electron の MIT ライセンス) はアプリ本体のライセンスと紛らわしいため licenses/ へ移す。
+ */
+function prepareDistribution(outputDir) {
+    const licensesDir = path.join(outputDir, "licenses");
+    fs.mkdirSync(licensesDir, { recursive: true });
+
+    const copies = [
+        [path.join(ROOT, "LICENSE"), "HUIS-UI-CREATOR-LICENSE.txt"],
+        [path.join(WWW, "app", "res", "license", "licenses.txt"), "THIRD-PARTY-LICENSES.txt"],
+        [path.join(WWW, "app", "res", "fonts", "LICENSE_OFL.txt"), "NotoSansCJKjp-LICENSE.txt"],
+    ];
+    for (const [src, name] of copies) {
+        fs.copyFileSync(src, path.join(licensesDir, name));
+    }
+    const moves = [
+        ["LICENSE", "Electron-LICENSE.txt"],
+        ["LICENSES.chromium.html", "LICENSES.chromium.html"],
+    ];
+    for (const [src, name] of moves) {
+        const srcPath = path.join(outputDir, src);
+        if (fs.existsSync(srcPath)) {
+            fs.renameSync(srcPath, path.join(licensesDir, name));
+        }
+    }
+
+    const readme = fs.readFileSync(path.join(ROOT, "build", "dist-readme.txt"), "utf8")
+        .replace(/^﻿/, "")
+        .replaceAll("%VERSION%", pkg.version)
+        .replace(/\r?\n/g, "\r\n");
+    fs.writeFileSync(path.join(outputDir, "はじめにお読みください.txt"), "﻿" + readme);
+}
+
+/**
+ * dir の中身を、rootName フォルダに入れた形で zip にまとめる
+ */
+async function createZip(dir, rootName, zipPath) {
+    const { ZipWriter, Uint8ArrayReader, configure } = await import("@zip.js/zip.js");
+    const { Writable } = await import("node:stream");
+    configure({ useWebWorkers: false });
+
+    fs.rmSync(zipPath, { force: true });
+    const zipWriter = new ZipWriter(Writable.toWeb(fs.createWriteStream(zipPath)));
+    const walk = async (absDir, relDir) => {
+        for (const entry of fs.readdirSync(absDir, { withFileTypes: true })) {
+            const absPath = path.join(absDir, entry.name);
+            const relPath = relDir + "/" + entry.name;
+            if (entry.isDirectory()) {
+                await zipWriter.add(relPath + "/", null, { directory: true });
+                await walk(absPath, relPath);
+            } else {
+                const stat = fs.statSync(absPath);
+                await zipWriter.add(relPath, new Uint8ArrayReader(fs.readFileSync(absPath)), { lastModDate: stat.mtime });
+            }
+        }
+    };
+    await walk(dir, rootName);
+    await zipWriter.close();
+}
