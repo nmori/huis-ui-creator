@@ -16,8 +16,8 @@
 
 /// <reference path="../../include/interfaces.d.ts" />
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         /**
          * 自作デザインのダイアログのベースとなるクラス。

@@ -18,11 +18,11 @@
 
 /* tslint:disable:max-line-length no-string-literal */
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
         import Tools = CDP.Tools;
         import Framework = CDP.Framework;
-        import JQUtils = Util.JQueryUtils;
+        import JQUtils = Garage.Util.JQueryUtils;
 
         var TAG = "[Garage.View.PropertyArea.Button.MacroButtonPropertyArea] ";
 
@@ -83,7 +83,7 @@ module Garage {
                 this.isMacroOrderChanging = true;
 
                 //ボタンが所属する信号の順番を取得
-                let $target = $(event.currentTarget);
+                let $target = $(event.currentTarget as HTMLElement);
                 let order = this.getOrderFrom($target);
 
                 //二重発火を防止用。actingの場合はこの段階で無視。
@@ -160,7 +160,7 @@ module Garage {
                 this.isMacroOrderChanging = true;
 
                 //ボタンが所属する信号の順番を取得
-                let $target = $(event.currentTarget);
+                let $target = $(event.currentTarget as HTMLElement);
                 let order = this.getOrderFrom($target);
 
                 //二重発火を防止用。actingの場合はこの段階で無視。
@@ -227,7 +227,7 @@ module Garage {
             //deleteボタンが押されたときに呼ばれる
             private onDeleteButtonClick(event: Event) {
                 let FUNCTION_NAME = TAG + "onDeleteButtonClick";
-                let $target = $(event.currentTarget);
+                let $target = $(event.currentTarget as HTMLElement);
                 let order = this.getOrderFrom($target);
 
                 if (order == ConstValue.FIRST_MACRO_ORDER) {
@@ -266,7 +266,7 @@ module Garage {
             //リモコン選択用のプルダウンが変更されたときに呼ばれる
             private onRemotePullDownListChanged(event: Event) {
                 let FUNCTION_NAME = TAG + "onRemotePullDownListChanged";
-                let $target = $(event.currentTarget);
+                let $target = $(event.currentTarget as HTMLElement);
                 let remoteId = $target.val();
 
                 //remoteIdがない場合、処理を終了する。
@@ -302,7 +302,7 @@ module Garage {
                 let FUNCTION_NAME = TAG + "onFunctionPullDownListChanged";
                 this.updateModel();
 
-                let $target = $(event.currentTarget);
+                let $target = $(event.currentTarget as HTMLElement);
                 //noneのoptionをもっていたとき,noneの選択肢を消すため表示を更新する。
                 if ($target.find(".default-value").length != 0) {
                     this.renderSignalContainers();
@@ -313,13 +313,13 @@ module Garage {
             private onPlusBtnClick(event: Event) {
                 let FUNCTION_NAME = TAG + "onPlusBtnClick : ";
 
-                let $target = $(event.currentTarget);
+                let $target = $(event.currentTarget as HTMLElement);
                 if ($target.hasClass("disabled")) {
                     return;
                 }
 
                 let $signalContainer = this.$el.find("#signals-container");
-                let tmpInput = this.$el.find(".action-input[data-state-id=\"" + this.getModel().default + "\"]").val();
+                let tmpInput = this.$el.find(".action-input[data-state-id=\"" + this.getModel().default + "\"]").val() as string;
 
                 let initialAction: IAction = {
                     input: tmpInput,
@@ -369,7 +369,7 @@ module Garage {
             /*
             * 保持しているモデルの内容でプルダウンを描画する
             */
-            render(): Backbone.View<Model.Item> {
+            render(): this {
                 super.render();
                 let FUNCTION_NAME = TAG + ":renderView : ";
 
@@ -422,7 +422,7 @@ module Garage {
                     return;
                 }
 
-                let tmpInput = this._getActionPulldownJquery(this.getModel().getDefaultStateId()).val();
+                let tmpInput = this._getActionPulldownJquery(this.getModel().getDefaultStateId()).val() as string;
 
                 //それぞのアクションのプルダウンの値を取得。
                 for (let i = 0; i < $signalContainers.length; i++) {
@@ -806,7 +806,7 @@ module Garage {
                     return;
                 }
 
-                interval = parseFloat($intervalPullDown.val());
+                interval = parseFloat(($intervalPullDown.val() as string));
                 if (!Util.JQueryUtils.isValidValue(interval)) {
                     return undefined;
                 }

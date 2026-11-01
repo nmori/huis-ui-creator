@@ -16,8 +16,8 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
 
         /**
          * リモコンのアイテムをコピー/貼り付けするためのクリップボード

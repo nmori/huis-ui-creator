@@ -16,8 +16,14 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
+
+        // @zip.js/zip.js (Electron renderer では nodeIntegration 経由で読み込む)
+        const zipjs: typeof import("@zip.js/zip.js") = require("@zip.js/zip.js");
+        // Web Worker は使用しない (file:// からの worker 読み込みを避ける)
+        zipjs.configure({ useWebWorkers: false });
+
         export class ZipManager {
 
             /**
@@ -31,45 +37,42 @@ module Garage {
                 let df = $.Deferred<void>();
                 let promise = CDP.makePromise(df);
 
-                zip.createWriter(new zip.BlobWriter(""), (writer) => {
-                    if (!files || files.length <= 0) return;
-                    let index: number = 0;
+                if (!files || files.length <= 0) return promise;
 
-                    function next() {
-                        let filePath = path.resolve(srcRoot, files[index]);
-                        let fileData: NodeBuffer;
-                        let fileBlob: Blob;
+                let writer = new zipjs.ZipWriter(new zipjs.Uint8ArrayWriter());
+
+                let addFiles = async (): Promise<boolean> => {
+                    for (let file of files) {
+                        let filePath = path.resolve(srcRoot, file);
+                        let fileData: Buffer;
                         try {
                             fileData = fs.readFileSync(filePath);
-                            fileBlob = new Blob([fileData]);
                         } catch (e) {
                             console.error("failed to read a file: " + filePath);
                             console.error(e);
                             df.reject("failed to read a file: " + filePath);
+                            return false;
+                        }
+                        await writer.add(file.replace(/\\/g, "/"), new zipjs.Uint8ArrayReader(fileData));
+                    }
+                    return true;
+                };
+
+                addFiles()
+                    .then(async (succeeded) => {
+                        if (!succeeded) {
                             return;
                         }
-
-                        writer.add(files[index].replace(/\\/g, "/"), new zip.BlobReader(fileBlob), () => {
-                            index++;
-
-                            if (index < files.length) {
-                                next();
-                            } else {
-                                writer.close((blob) => {
-                                    ZipManager.saveBlobToFile(blob, dstFile)
-                                        .done(() => {
-                                            df.resolve()
-                                        }).fail((err) => {
-                                            df.reject(err)
-                                        });
-                                });
-                            }
-                        });
-                    }
-
-                    next();
-                },
-                    () => {
+                        let zipData = await writer.close();
+                        ZipManager.saveDataToFile(zipData, dstFile)
+                            .done(() => {
+                                df.resolve()
+                            }).fail((err) => {
+                                df.reject(err)
+                            });
+                    })
+                    .catch((err) => {
+                        console.error("create zip errored: " + err);
                         alert("create zip errored");
                         df.reject();
                     });
@@ -78,11 +81,11 @@ module Garage {
             }
 
             /**
-             * Blobをファイルに出力
-             * @param blob {Blob}
+             * バイナリーデータをファイルに出力
+             * @param data {Uint8Array}
              * @param dstFile {string} 出力ファイル名（フルパス）
              */
-            private static saveBlobToFile(blob: Blob, dstFile: string): CDP.IPromise<void> {
+            private static saveDataToFile(data: Uint8Array, dstFile: string): CDP.IPromise<void> {
                 let df = $.Deferred<void>();
                 let promise = CDP.makePromise(df);
 
@@ -99,24 +102,14 @@ module Garage {
                     }
                 }
 
-                let reader = new FileReader();
-                reader.onload = function () {
-                    try {
-                        let result = new Uint8Array(reader.result);
-                        let buf = new Buffer(result.length);
-                        for (let i = 0; i < result.length; i++) {
-                            buf.writeUInt8(result[i], i);
-                        }
-
-                        fs.writeFileSync(dstFile, buf);
-                        console.log("create file: " + dstFile);
-                        df.resolve();
-                    } catch (e) {
-                        console.error("failed to create file: " + dstFile);
-                        df.reject();
-                    }
-                };
-                reader.readAsArrayBuffer(blob);
+                try {
+                    fs.writeFileSync(dstFile, data);
+                    console.log("create file: " + dstFile);
+                    df.resolve();
+                } catch (e) {
+                    console.error("failed to create file: " + dstFile);
+                    df.reject();
+                }
 
                 return promise;
             }
@@ -132,11 +125,9 @@ module Garage {
                 let df = $.Deferred<void>();
                 let promise = CDP.makePromise(df);
 
-                let fileData: NodeBuffer;
-                let fileBlob: Blob;
+                let fileData: Buffer;
                 try {
                     fileData = fs.readFileSync(zipFile);
-                    fileBlob = new Blob([fileData]);
                 } catch (e) {
                     console.error("failed to read a zip file: " + zipFile);
                     console.error(e);
@@ -144,8 +135,9 @@ module Garage {
                     return promise;
                 }
 
-                zip.createReader(new zip.BlobReader(fileBlob), (reader) => {
-                    reader.getEntries((entries) => {
+                let reader = new zipjs.ZipReader(new zipjs.Uint8ArrayReader(fileData));
+                reader.getEntries()
+                    .then((entries) => {
                         if (entries.length <= 0) {
                             console.log("nothing to decompress");
                             df.resolve();
@@ -169,13 +161,14 @@ module Garage {
                                 console.log("failed to decompress: " + err);
                                 df.reject(err, ImportManager.createRemoteFileErrorMessage());
                             });
+                    }, (error) => {
+                        // hsrcファイル読み込み失敗
+                        console.error("failed to read the hsrc file" + error);
+                        df.reject(error, ImportManager.createRemoteFileErrorMessage());
+                    })
+                    .finally(() => {
+                        reader.close();
                     });
-
-                }, (error) => {
-                    // hsrcファイル読み込み失敗
-                    console.error("failed to read the hsrc file" + error);
-                    df.reject(error, ImportManager.createRemoteFileErrorMessage());
-                });
 
                 return promise;
             }
@@ -185,32 +178,43 @@ module Garage {
              * @param entry {zip.Entry} 出力するzipエントリー
              * @param dstDir {string} 出力先の基準フォルダ
              */
-            private static decompressOneFile(entry: zip.Entry, dstDir: string): CDP.IPromise<void> {
+            private static decompressOneFile(entry: import("@zip.js/zip.js").Entry, dstDir: string): CDP.IPromise<void> {
                 let df = $.Deferred<void>();
                 let promise = CDP.makePromise(df);
 
                 if (entry.directory) {
                     console.log("skip decompress: " + entry.filename);
-                    let df = $.Deferred<void>();
-                    let promise = CDP.makePromise(df);
-
                     df.resolve();
                     return promise;
                 }
 
-                entry.getData(new zip.BlobWriter(""), (blob) => {
-                    // Replacement of next line assumes that each file path in zip doesn't contain "\".
-                    // Note that this assumption VIOLATE zip file format.
-                    let fileName = entry.filename.replace(/\\/g, "/");
-                    ZipManager.saveBlobToFile(blob, path.join(dstDir, fileName))
-                        .done(() => {
-                            console.log("succeeded to decompress: " + fileName);
-                            df.resolve();
-                        }).fail(() => {
-                            console.error("failed to decompress: " + fileName);
-                            df.reject();
-                        });
-                });
+                // Replacement of next line assumes that each file path in zip doesn't contain "\".
+                // Note that this assumption VIOLATE zip file format.
+                let fileName = entry.filename.replace(/\\/g, "/");
+                let dstFile = path.join(dstDir, fileName);
+
+                // 解凍先フォルダの外に出るパス ("../" や絶対パス) は出力しない (Zip Slip 対策)
+                let relativePath = path.relative(path.resolve(dstDir), path.resolve(dstFile));
+                if (relativePath === "" || relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
+                    console.error("invalid entry path: " + entry.filename);
+                    df.reject("invalid entry path: " + entry.filename);
+                    return promise;
+                }
+
+                (entry as import("@zip.js/zip.js").FileEntry).getData(new zipjs.Uint8ArrayWriter())
+                    .then((data) => {
+                        ZipManager.saveDataToFile(data, dstFile)
+                            .done(() => {
+                                console.log("succeeded to decompress: " + fileName);
+                                df.resolve();
+                            }).fail(() => {
+                                console.error("failed to decompress: " + fileName);
+                                df.reject();
+                            });
+                    }, (err) => {
+                        console.error("failed to decompress: " + fileName + " " + err);
+                        df.reject();
+                    });
 
                 return promise;
             }

@@ -7,3 +7,5 @@ obj/
 tests/
 www/app/
 www/
+native/usb_dev/build/
+dist/

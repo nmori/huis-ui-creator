@@ -18,14 +18,14 @@
 /// <reference path="../include/interfaces.d.ts" />
 /// <reference path="ButtonState.ts" />
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
         var TAG = "[Garage.Model.ButtonStateCollection] ";
 
         export class ButtonStateCollection extends Backbone.Collection<ButtonState> {
             model = ButtonState;
 
-            clone(): ButtonStateCollection {
+            clone(): any {
                 let result: ButtonStateCollection = new ButtonStateCollection();
                 for (let state of this.models){
                     result.add(state.clone());

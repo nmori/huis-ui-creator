@@ -4,15 +4,13 @@
  *
  * Date: 2015-12-10T15:37:05
  */
-/// <reference path="jquery.d.ts" />
-/// <reference path="backbone.d.ts" />
 declare namespace CDP {
     namespace UI {
         /**
          * @class ListViewGlobalConfig
          * @brief cdp.ui.listview の global confing
          */
-        module ListViewGlobalConfig {
+        namespace ListViewGlobalConfig {
             let WRAPPER_CLASS: string;
             let WRAPPER_SELECTOR: string;
             let SCROLL_MAP_CLASS: string;
@@ -673,7 +671,7 @@ declare namespace CDP {
          * @brief 内部で使用する便利関数
          *        Tools からの最低限の流用
          */
-        module _ListViewUtils {
+        namespace _ListViewUtils {
             /**
              * css の vender 拡張 prefix を返す
              *

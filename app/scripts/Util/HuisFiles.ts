@@ -16,8 +16,8 @@
 
 /// <referecen path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
         import IPromise = CDP.IPromise;
 
         var TAGS = {
@@ -140,6 +140,15 @@ module Garage {
                 console.log("rootDirectory=" + rootDirectory);
 
                 let commonFace = this._parseFace(facePath, remoteId, rootDirectory);
+                // ジャンプボタンは古いファームウェアでは使えないため、パレットに出さない
+                if (commonFace != null && !Util.VersionManager.isJumpSupported()) {
+                    for (let module of commonFace.modules) {
+                        if (module.button == null) {
+                            continue;
+                        }
+                        module.button = module.button.filter((button) => !button.isJumpButton());
+                    }
+                }
                 this.commonRemoteInfo_ = {
                     remoteId: remoteId,
                     face: commonFace,
@@ -336,7 +345,9 @@ module Garage {
                 }
 
                 //remoteIdがみつからない場合、キャッシュからremoteIdを取得
-                if (action.deviceInfo) {
+                // ただし deviceInfo.id にはキャッシュのキー ("0-8-493-0-0" 等) が入っている場合があるため、
+                // 実在するリモコンの ID の場合のみ返す (それ以外は「不明なリモコン」として扱わせる)
+                if (action.deviceInfo && this.getFace(action.deviceInfo.id) != null) {
                     return remoteId = action.deviceInfo.id;
                 }
 
@@ -1330,6 +1341,11 @@ module Garage {
                         color: inputFace.color,
                         modules: moduleNames
                     };
+                    // 古い本体 (UI CREATOR 3.x 以前の形式) の face には color がない
+                    // outputDirPath の指定があるのはエクスポート時のみで、それ以外は本体へ出力される
+                    if (outputDirPath == null && Util.VersionManager.isLegacyFormat()) {
+                        delete face.color;
+                    }
 
                     let faceFileName = remoteId + ".face"
                     if (isMasterFace) {
@@ -1420,6 +1436,14 @@ module Garage {
                         case Model.ConstValue.SCREENSAVER_DIR_NAME:
                         case Util.ThemeInstaller.getThemePathName():
                             return false;
+
+                        case "9999":
+                            // 古い本体の special face は remotelist.ini に載らないため削除しない
+                            // (UI CREATOR 3.x 以前と同じ扱い)
+                            if (Util.VersionManager.isLegacyFormat()) {
+                                return false;
+                            }
+                            break;
 
                         default:
                             /* jshint -W032:true */
@@ -1593,16 +1617,38 @@ module Garage {
                 let sharedInfo: ISharedInfo = this._parseIniFile(sharedInfoFilePath);
                 if (sharedInfo != null) {
                     return new Model.SharedInfo(sharedInfo);
-                } else {
-                    console.warn(TAGS.HuisFiles + "failed to parse sharedinfo.ini, connected HUIS may be old");
+                }
+                console.warn(TAGS.HuisFiles + "failed to parse sharedinfo.ini, connected HUIS may be old");
+
+                // sharedinfo.ini がない古い本体 (4.2.0 未満) は appversion にバージョンが書かれている
+                if (!Util.MiscUtil.isBz()) {
+                    let appVersion = this._loadAppVersion();
+                    if (appVersion != null) {
+                        console.log(TAGS.HuisFiles + "use appversion: " + appVersion);
+                        return new Model.SharedInfo({ system: { version: appVersion } } as ISharedInfo);
+                    }
+                }
+                return null;
+            }
+
+            /**
+             * 古い本体のルートにある appversion ファイルからバージョンを読み込む。
+             * @return {string} バージョン文字列。読み込めない場合は null。
+             */
+            private _loadAppVersion(): string {
+                const appVersionFilePath = path.join(HUIS_ROOT_PATH, "appversion");
+                try {
+                    let version = fs.readFileSync(appVersionFilePath, "utf8").replace(/^﻿/, "").trim();
+                    return new Model.Version.HuisVersionString(version).isValid() ? version : null;
+                } catch (err) {
+                    console.warn(TAGS.HuisFiles + "failed to read appversion: " + err);
                     return null;
                 }
             }
 
             private _parseIniFile(path): any {
-                var nodeIni = require("node-ini");
                 try {
-                    return nodeIni.parseSync(path);
+                    return Util.IniParser.parseFileSync(path);
                 } catch (e) {
                     console.warn(TAGS.HuisFiles + "failed to parse ini file: file_path=" + path);
                     return;
@@ -1619,7 +1665,7 @@ module Garage {
                     return null;
                 }
 
-                // remotelist.ini を node-ini で parse
+                // remotelist.ini を IniParser で parse
                 var remoteListIni = this._parseIniFile(remoteListIniPath);
                 if (!remoteListIni) {
                     console.error(TAGS.HuisFiles + "_loadRemoteList() [parseError] remotelist.ini");

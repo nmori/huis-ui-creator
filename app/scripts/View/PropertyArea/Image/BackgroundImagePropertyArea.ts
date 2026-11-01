@@ -18,8 +18,8 @@
 
 /* tslint:disable:max-line-length no-string-literal */
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         var TAG = "[Garage.View.PropertyArea.Image.BackgroundImagePropertyArea] ";
 
@@ -82,7 +82,7 @@ module Garage {
                     });
             }
 
-            render(): Backbone.View<Model.Item> {
+            render(): this {
                 super.render()
                 this.$el.find((<BackgroundImagePreviewWindow>this.previewWindow_).getDomId()).append((<BackgroundImagePreviewWindow>this.previewWindow_).render().$el);
                 this.endProcessOfRender();

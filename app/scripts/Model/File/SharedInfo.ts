@@ -16,8 +16,8 @@
 
 /// <reference path="../../include/interfaces.d.ts" />
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
 
         const TAG: string = "[Garage.Model.SharedInfo] ";
 
@@ -54,36 +54,28 @@ module Garage {
             private _theme_version: number;
 
             constructor(sharedInfo: ISharedInfo) {
-                try {
-                    this._version = sharedInfo.system.version;
-                    this._winRequiredVersion = sharedInfo.system.win_required_version;
-                    this._macRequiredVersion = sharedInfo.system.mac_required_version;
-                    this._isBtoB = (sharedInfo.system.is_btob != null);
-
-                    this._modelColor = sharedInfo.color.model_color;
-                    this._settingColor = sharedInfo.color.setting_color;
-
-                    this._theme_state = (sharedInfo.theme.theme_state === "true");
-                    this._theme_file_name = sharedInfo.theme.theme_file_name;
-                    this._theme_path = sharedInfo.theme.theme_path;
-                    this._theme_version = sharedInfo.theme.version;
-                } catch (error) {
-                    // set default value
-                    this._version = "0.0.0"
-                    this._winRequiredVersion = "0.0.0";
-                    this._macRequiredVersion = "0.0.0";
-                    this._isBtoB = false;
-
-                    this._modelColor = "white";
-                    this._settingColor = "white";
-
-                    this._theme_state = false;
-                    this._theme_file_name = "";
-                    this._theme_path = "";
-                    this._theme_version = 0;
-
-                    console.log("[sharedinfo] read error");
+                // 古いファームウェアの sharedinfo.ini には theme セクション等が存在しないため、
+                // セクションごとに読み込み、存在しないセクションは既定値とする
+                // (1 つでも欠けると version まで既定値になり、バージョンチェックで弾かれてしまう)
+                const system = (sharedInfo && sharedInfo.system) || <any>{};
+                const color = (sharedInfo && sharedInfo.color) || <any>{};
+                const theme = (sharedInfo && sharedInfo.theme) || <any>{};
+                if (sharedInfo == null || sharedInfo.system == null) {
+                    console.log("[sharedinfo] system section is not found");
                 }
+
+                this._version = system.version || "0.0.0";
+                this._winRequiredVersion = system.win_required_version || "0.0.0";
+                this._macRequiredVersion = system.mac_required_version || "0.0.0";
+                this._isBtoB = (system.is_btob != null);
+
+                this._modelColor = color.model_color || ModelColor.WHITE;
+                this._settingColor = color.setting_color || SettingColor.WHITE;
+
+                this._theme_state = (theme.theme_state === "true");
+                this._theme_file_name = theme.theme_file_name || "";
+                this._theme_path = theme.theme_path || "";
+                this._theme_version = theme.version || 0;
             }
 
             get version(): string {

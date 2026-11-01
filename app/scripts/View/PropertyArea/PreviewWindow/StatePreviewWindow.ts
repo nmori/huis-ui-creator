@@ -18,8 +18,8 @@
 
 /* tslint:disable:max-line-length no-string-literal */
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         var TAG = "[Garage.View.PropertyArea.PreviewWindow.StatePreviewWindow] ";
 
@@ -102,7 +102,7 @@ module Garage {
                 var overFlowWidth = $overflow.find(ConstValue.POPUP_LIST_DOM_CLASS).outerWidth(true);
 
                 //押下されたボタンのJquery
-                var $target = $(event.currentTarget);
+                var $target = $(event.currentTarget as HTMLElement);
                 var popupY = $target.offset().top + $target.height();
                 var popupX = $target.offset().left - overFlowWidth + $target.outerWidth() + previewBorderWidth;
                 var options: PopupOptions = {
@@ -152,7 +152,7 @@ module Garage {
                 return null;
             }
 
-            render(): Backbone.View<Model.Item> {
+            render(): this {
                 let FUNCTION_NAME = TAG + "render : ";
                 this.undelegateEvents(); //DOM更新前に、イベントをアンバインドしておく。
                 this.$el.children().remove();
@@ -208,8 +208,8 @@ module Garage {
                 let $editTextBtn: JQuery = $(document).find(ConstValue.EDIT_TEXT_BTN_DOM_ID);
 
                 //2重発火防止のため、最初にoffする。
-                $editImageBtn.off(Events.CLICK, $.proxy(this._onEditImageBtnClicked, this));
-                $editTextBtn.off(Events.CLICK, $.proxy(this._onEditTextBtnClicked, this));
+                $editImageBtn.off(Events.CLICK, <any>$.proxy(this._onEditImageBtnClicked, this));
+                $editTextBtn.off(Events.CLICK, <any>$.proxy(this._onEditTextBtnClicked, this));
                 $editImageBtn.on(Events.CLICK, $.proxy(this._onEditImageBtnClicked, this));
                 $editTextBtn.on(Events.CLICK, $.proxy(this._onEditTextBtnClicked, this));
             }

@@ -15,11 +15,10 @@
 */
 
 /// <reference path="../include/interfaces.d.ts" />
-/// <reference path="../../modules/include/jquery.d.ts" />
 /// <reference path="BasePage.ts" />
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         import Framework = CDP.Framework;
         import Tools = CDP.Tools;
@@ -111,7 +110,7 @@ module Garage {
                 };
             }
 
-            render(): Splash {
+            render(): this {
                 return this;
             }
 

@@ -17,8 +17,8 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
         var TAG = "[Garage.Model.ButtonState] ";
 
         namespace ConstValue {
@@ -27,6 +27,7 @@ module Garage {
         }
 
         export class ButtonState extends Backbone.Model {
+            declare id: number; // IState.id と合わせる (Backbone.Model の型定義上は string | number)
             private imageCollection_: Backbone.Collection<ImageItem>;
 
             defaults() {
@@ -40,7 +41,9 @@ module Garage {
             constructor(attributes?: any) {
                 super();
                 this.imageCollection_ = new ImageItemsCollection();
-                super(attributes, null);
+                // imageCollection_ を用意してから attributes で初期化し直す。
+                // (class では super() を 2 回呼べないため、Backbone.Model のコンストラクター関数を直接呼ぶ)
+                (<any>Backbone.Model).call(this, attributes, null);
             }
 
             clone() {
@@ -106,9 +109,11 @@ module Garage {
                     }
                 }
                 if (this.label) {
+                    // outputDirPath の指定があるのはエクスポート時のみで、それ以外は本体へ出力される
+                    let isLegacyFormat: boolean = (outputDirPath == null) && Util.VersionManager.isLegacyFormat();
                     convertedState.label = [];
                     for (let label of this.label) {
-                        convertedState.label.push(label.convertToHuisData());
+                        convertedState.label.push(label.convertToHuisData(isLegacyFormat));
                     }
                 }
                 if (this.action) {

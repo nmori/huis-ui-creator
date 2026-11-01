@@ -16,8 +16,8 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
         export interface IDataOptions {
             all?: boolean; //! true を指定した場合、すべての要素の deta 属性に値を入れる。それ以外の場合は、先頭の要素の data 属性に値を入れる。
         }
@@ -53,10 +53,10 @@ module Garage {
                 if (_.isString(param1) || _.isNumber(param1)) {
                     if (param2 && param2.all) {
                         $elem.each((index, elem) => {
-                            (<HTMLElement>elem).dataset[key] = param1;
+                            (<HTMLElement>elem).dataset[key] = String(param1);
                         });
                     } else {
-                        $elem.get(0).dataset[key] = param1;
+                        $elem.get(0).dataset[key] = String(param1);
                     }
                 } else {
                     return $elem.get(0).dataset[key];
@@ -265,7 +265,7 @@ module Garage {
                     return;
                 }
 
-                var remoteName: string = $target.val();
+                var remoteName: string = ($target.val() as string);
                 $target.val("");
                 $target.focus();
                 $target.val(remoteName);

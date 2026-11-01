@@ -16,7 +16,7 @@
 
 /// <reference path="include/interfaces.d.ts" />
 
-module Garage {
+namespace Garage {
 
     import global = CDP.global;
 
@@ -35,9 +35,7 @@ module Garage {
 
     define("app", [
         "hogan",
-        "zip",
-        "modernizr",
-        "cdp.nativebridge",
+        "cdp.promise",
         "cdp.ui.jqm",
     ], () => {
         // set global namespace reference for typescript compiled source.
@@ -46,6 +44,7 @@ module Garage {
         //<<
         // lazy load for application scripts. 
         CDP.lazyLoad("lazy");
+        ClassCompat.apply();
         //>>
 
         return { main: onStart };

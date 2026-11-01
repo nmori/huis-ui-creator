@@ -18,8 +18,8 @@
 
 /* tslint:disable:max-line-length no-string-literal */
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         var TAG = "[Garage.View.PropertyArea.PreviewWindow.Preview.ImagePreview] ";
 
@@ -38,6 +38,7 @@ module Garage {
             }
 
 
+            // @ts-expect-error Backbone は events をメソッドでも受け付ける (型定義上はプロパティ)
             events() {
                 // Please add events
                 return {
@@ -46,7 +47,7 @@ module Garage {
             }
 
 
-            render(option?: any): Backbone.View<Model.Item> {
+            render(option?: any): this {
                 super.render();
                 this.endProcessOfRender();
                 return this;

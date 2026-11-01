@@ -20,7 +20,22 @@ HUIS UI CREATOR は、複数の機器のボタンからあなたがよく使う�
 HUIS UI CREATOR で作成したリモコンを反映するには HUIS のアップデートを実行する必要があります。
 [こちら (HUIS REMOTE CONTROLLERのアップデート方法)](firmware/readme.md) を参照してください。
 
-HUIS UI CREATORを使用するには、HUISリモコンのソフトウェアをバージョン4.1.0以上にアップデートしてください。 
+HUIS UI CREATORを使用するには、HUISリモコンのソフトウェアがバージョン4.0.0以上である必要があります。
+
+アップデートファイルの配布は終了しているため、古いソフトウェアの HUIS でも共通の機能は使えるようにしています。
+以下の機能は、接続している HUIS のソフトウェアのバージョンに応じて自動的に出しわけられます。
+
+| 機能 | 必要な HUIS のソフトウェア |
+| --- | --- |
+| リモコンの作成・編集、マクロ、コピー＆ペースト、ラベル色 (黒/白) | 4.0.0 以上 |
+| 本体の色設定 (白/黒) の反映、プリセットリモコンのインポート | 4.2.0 以上 |
+| ジャンプボタン | 4.3.0 以上 |
+| お気に入り待受画面の設定 | 4.6.0 以上 |
+| テーマ | 5.0.0 以上 |
+
+4.2.0 未満の HUIS には、当時の HUIS UI CREATOR (3.x) と同じ形式でリモコンを書き出します (ラベル色は数値、face の color やモジュールの group は出力しない)。
+
+※ 5.0.0 未満での動作は実機で確認できていません。
 
 ====
 
@@ -76,15 +91,13 @@ HUIS UI CREATORを使用するには、HUISリモコンのソフトウェアを�
 
 ビルドの前に、以下の開発環境の準備を行ってください。
 
-| Requirement                                                                 | Remarks                                       |
-|:----------------------------------------------------------------------------|:----------------------------------------------|
-| [Python 2.6 or 2.7](https://www.python.org/downloads/)                      |                                               |
-| [Ruby](http://rubyinstaller.org/)                                           |                                               |
-| [Node.js](http://nodejs.org/download/ )                                     |                                               |
-| [Compass](http://compass-style.org/)                                        |                                               |
-| [Grunt CLI](https://github.com/gruntjs/grunt-cli)                           |                                               |
-| [compiler for node-gyp](https://github.com/TooTallNate/node-gyp/)           | Required for compiling native Node.js modules |
-| [electron-packager](https://github.com/electron-userland/electron-packager) |                                               |
+| Requirement                                                                 | Remarks                                                        |
+|:----------------------------------------------------------------------------|:---------------------------------------------------------------|
+| [Node.js](https://nodejs.org/) 22.12 以上                                    | npm 11 以上                                                    |
+| [Python](https://www.python.org/downloads/) 3                               | Windows のみ。ネイティブ モジュール (usb_dev) のビルドに使用   |
+| [Visual Studio](https://visualstudio.microsoft.com/) の「C++ によるデスクトップ開発」ワークロード | Windows のみ。ネイティブ モジュール (usb_dev) のビルドに使用   |
+
+Ruby / Compass / Grunt / electron-packager の個別インストールは不要です。
 
 #### ビルド手順
 
@@ -96,51 +109,40 @@ HUIS UI CREATORを使用するには、HUISリモコンのソフトウェアを�
 
         $ cd huis-ui-creator
 
-3. 以下のコマンドを実行します。
+3. 以下のコマンドで依存モジュールをインストールします。Windows では、HUIS の接続検出に使用するネイティブ モジュール (`native/usb_dev`) もビルドされます。
 
         $ npm install
 
-4. 以下のコマンドでネイティブ モジュールのビルドを行います。(Windows 32bit 向けの場合, Mac向けの場合は不要)
+4. 以下のコマンドで TypeScript と SCSS のビルドを行います。
 
-        $ cd node_modules
-        $ cd usb_dev
-        $ set HOME=~/.electron-gyp
-        $ node-gyp rebuild --target=1.4.10 --arch=ia32 --dist-url=https://atom.io/download/atom-shell
+        $ npm run build
 
-  Electron のバージョン`--target`は、適宜変更してください。また、Windows 64bit 向けにビルドを行う場合は、`--arch=x64` に変更してください。
+  ビルドが完了したら、`www` 以下に Electron アプリとして実行できる形で出力されます。以下のコマンドで、パッケージングせずに起動できます。
 
-5. 再び、`huis-ui-creator` のルートディレクトリーに移動します。
-
-6. 以下のコマンドで TypeScript と SCSS のビルドを行います。
-
-        $ grunt build
-
-Mac 向けの場合は、　　以下のように"--platform=darwin"をつけてください。
-
-        $ grunt build --platform=darwin
-
-7. grunt によるビルドが完了したら、`www/app`以下に TypeScript と SCSS がコンパイルされたものが出力されます。Electron のパッケージングを行うために、`www` ディレクトリーに以下のファイルとディレクトリーをコピーします。
-
-  - package.json
-  - main.js
-  - node_modules ディレクトリー
-
-  `node_modules` ディレクトリーのコピー中に「パスが長すぎる」という内容のエラーや警告が出た場合は、無視して進めてください。
+        $ npm start
 
 #### パッケージ化
-前述の grunt によるビルドのあとのファイルコピーが終わったら、以下のコマンドを実行すると、パッケージングができます。(Windows 32bit 向けの場合)
 
-    $ cd <huis-ui-creator dir>\www
-    $ electron-packager . <アプリ名> --platform=win32 --arch=ia32 --electron-version=1.4.10 --ignore="node_modules/(grunt*|electron-rebuild)" --ignore=".git" --ignore="Service References" --ignore="docs" --ignore="obj" --ignore="tests/*" --ignore="www" --ignore="platforms" --ignore="-x64$" --ignore="-ia32$"
+以下のコマンドを実行すると、release ビルドを行ったうえでパッケージングを行います。
 
-Electron のバージョン`--target`は、適宜変更してください。また、Windows 64bit 向けにビルドを行う場合は、`--arch=x64` に変更してください。ただし、前述のネイティブ モジュールのビルド時の `--target`, `--arch` オプションと同じものを指定してください。
-Mac 64bit 向けにビルドを行う場合は、`--platform=darwin`,　`--arch=x64`に変更してください。
+    $ npm run package
 
-`<アプリ名>`はパッケージングしたファイルが格納されるディレクトリーや、実行ファイル名等に使用されます。任意のアプリ名を指定してください。
+パッケージングが完了したら、`dist/HUIS UI CREATOR-<platform>-<arch>` ディレクトリーにパッケージングされたものが生成されます (Windows 64bit 向けの場合 `dist/HUIS UI CREATOR-win32-x64`)。
 
-パッケージングが完了したら、`<アプリ名>-win32-ia32` ディレクトリーにパッケージングされたものが生成されます (Windows 32bit 向けの場合。Mac 64bit 向けの場合　`<アプリ名>-darwin-x64`)。
+ビルドしている環境以外のプラットフォーム・アーキテクチャー向けにパッケージングする場合は、以下のように指定してください。
 
-`<アプリ名>.exe` (Mac向けの場合`<アプリ名>.app`)を起動して動作することを確認してください。
+    $ npm run package -- --platform=win32 --arch=ia32
+    $ npm run package -- --platform=darwin --arch=x64
+
+`HUIS UI CREATOR.exe` (Mac向けの場合`HUIS UI CREATOR.app`)を起動して動作することを確認してください。
+
+#### 開発時の補足
+
+- Electron は初回の `npm run build` / `npm start` 時にダウンロードされます。
+- 型チェックのみを行う場合は `npm run typecheck` を実行してください。
+- 実行ファイルと同じディレクトリーに `debug` という名前のファイルまたはディレクトリーがあると、起動時に開発者ツールが開きます。
+- VS Code の統合ターミナル等、環境変数 `ELECTRON_RUN_AS_NODE` が設定されている環境では Electron がアプリとして起動しません。`npm start` で起動する場合は、この環境変数を解除してください。
+
 ## 免責事項
 本ソースコードは開発用のものであり、製品版はデザイン等が異なります。
 

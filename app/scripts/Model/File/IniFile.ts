@@ -16,8 +16,8 @@
 
 /// <reference path="../../include/interfaces.d.ts" />
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
         const TAG: string = "[Garage.Model.IniFile] ";
 
         export abstract class IniFile {
@@ -33,10 +33,8 @@ module Garage {
              * @return {any} parseed ini file data
              */
             protected loadIniFile(file_path: string): any {
-                let nodeIni = require("node-ini");
-                nodeIni.encoding = 'utf-8';
                 try {
-                    return nodeIni.parseSync(path.resolve(file_path));
+                    return Util.IniParser.parseFileSync(path.resolve(file_path));
                 } catch (e) {
                     console.warn(TAG + "failed to parse ini file: file_path=" + file_path);
                     return;

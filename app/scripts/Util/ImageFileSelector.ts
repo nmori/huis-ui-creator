@@ -16,8 +16,8 @@
 
 /// <referecen path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
         namespace ConstValue {
             export const TEMPLATE_FILE_PATH: string = CDP.Framework.toUrl("/templates/item-detail.html");
             export const FILE_TYPE_JPG: string = "jpg";

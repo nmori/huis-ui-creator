@@ -10769,13 +10769,15 @@ $.widget( "mobile.popup", {
 			container: $.Deferred()
 		};
 
-		prerequisites.screen.then( function() {
+		// [HUIS UI CREATOR] jQuery 3 以降では then() のコールバックが非同期になり、下の $.when().done() より後に
+		// 呼ばれて無視される (ポップアップが閉じても非表示にならない) ため、jQuery 2 と同じく同期で呼ばれる done() を使う
+		prerequisites.screen.done( function() {
 			if ( prerequisites === self._prerequisites ) {
 				screenPrerequisite();
 			}
 		});
 
-		prerequisites.container.then( function() {
+		prerequisites.container.done( function() {
 			if ( prerequisites === self._prerequisites ) {
 				containerPrerequisite();
 			}

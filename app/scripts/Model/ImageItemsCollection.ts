@@ -18,8 +18,8 @@
 /// <reference path="../include/interfaces.d.ts" />
 /// <reference path="ImageItem.ts" />
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
         var TAG = "[Garage.Model.ImageItemsCollection] ";
 
         export class ImageItemsCollection extends Backbone.Collection<ImageItem> {

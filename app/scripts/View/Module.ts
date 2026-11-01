@@ -16,10 +16,10 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
         import Tools = CDP.Tools;
-        import JQUtils = Util.JQueryUtils;
+        import JQUtils = Garage.Util.JQueryUtils;
         var TAG = "[Garage.View.Module] ";
         var MAX_PAGE_CONT = 5;
 
@@ -49,6 +49,7 @@ module Garage {
                 this.parentFace = parentFace;
             }
 
+            // @ts-expect-error Backbone は events をメソッドでも受け付ける (型定義上はプロパティ)
             events() {
                 // Please add events
                 return {
@@ -92,7 +93,7 @@ module Garage {
                 this.moduleContainerTemplate_ = Tools.Template.getJST("#template-module-container", templateFile);
             }
 
-            render(): Module {
+            render(): this {
                 var pageCount: number = (<any>this.collection).getPageCount();
                 for (let i = this.$facePages_.length; i < pageCount; i++) {
                     let $facePage = $(this.faceAreaTemplate_({

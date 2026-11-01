@@ -17,8 +17,8 @@
 /// <reference path="../../include/interfaces.d.ts" />
 
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
         export namespace ConstValue {
             export const DEFAULT_IMAGE_PATH: string = "../res/images/screensaver/default_screensaver.png";
             export const SCREENSAVER_DIR_NAME: string = "standbydisplay";

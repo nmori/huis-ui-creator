@@ -16,8 +16,8 @@
 
 /// <reference path="../../include/interfaces.d.ts" />
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
 
         export namespace ConstValue {
             export const THEME_FILE_NAME = "theme.ini";

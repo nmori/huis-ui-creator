@@ -16,8 +16,8 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
         import Tools = CDP.Tools;
 
         var TAG = "[Garage.View.FaceRenderer] ";
@@ -47,6 +47,7 @@ module Garage {
                 super(options);
             }
 
+            // @ts-expect-error Backbone は events をメソッドでも受け付ける (型定義上はプロパティ)
             events() {
                 // Please add events
                 return {
@@ -63,7 +64,7 @@ module Garage {
                 this.type_ = options.attributes["type"];
             }
 
-            render(): FaceRenderer {
+            render(): this {
                 // face の用途によってレンダリングの仕方を変える
                 switch (this.type_) {
                     case "canvas":

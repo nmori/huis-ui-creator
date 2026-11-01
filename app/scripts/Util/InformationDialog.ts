@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
 
         import Dialog = CDP.UI.Dialog;
 

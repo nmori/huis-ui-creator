@@ -16,8 +16,8 @@
 
 /// <referecen path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
         let TAG = "[ExportManager]";
 
         export class ExportManager {

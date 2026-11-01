@@ -15,18 +15,17 @@
 */
 
 /// <reference path="../include/interfaces.d.ts" />
-/// <reference path="../../modules/include/jquery.d.ts" />
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         import Framework = CDP.Framework;
         import Tools = CDP.Tools;
         import UI = CDP.UI;
         import Dialog = CDP.UI.Dialog;
         import DialogOptions = CDP.UI.DialogOptions;
-        import JQUtils = Util.JQueryUtils;
-        import ZipManager = Util.ZipManager;
+        import JQUtils = Garage.Util.JQueryUtils;
+        import ZipManager = Garage.Util.ZipManager;
 
         let TAG_BASE: string = "[Garage.View.BasePage] ";
 
@@ -156,6 +155,7 @@ module Garage {
                 return View.Dialog.UnconnectedDialogType.NON_EDIT;
             }
 
+            // @ts-expect-error Backbone は events をメソッドでも受け付ける (型定義上はプロパティ)
             events(): any {  // 共通のイベント
                 return {
                     "click .custom-select": "onSelectClicked",
@@ -170,7 +170,7 @@ module Garage {
              * selectで表示されるプルダウンの位置を調節する。
              */
             private onSelectClicked(event: Event) {
-                var $target = $(event.currentTarget);
+                var $target = $(event.currentTarget as HTMLElement);
                 var selectId = $target.find("select").attr("id");
                 var $selectMenu = $("#" + selectId + "-listbox");
 

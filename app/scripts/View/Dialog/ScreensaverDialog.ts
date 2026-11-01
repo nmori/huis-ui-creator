@@ -16,8 +16,8 @@
 
 /// <reference path="../../include/interfaces.d.ts" />
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         export namespace ConstValue {
             export const DEFAULT_IMAGE_CLASS: string = "default-image";
@@ -44,6 +44,7 @@ module Garage {
                 this.changed_ = value;
             }
 
+            // @ts-expect-error Backbone は events をメソッドでも受け付ける (型定義上はプロパティ)
             events(): any {
                 return {
                     "click #dialog-button-ok": "saveClose",
@@ -104,7 +105,7 @@ module Garage {
                 $huisOverImage.addClass("over_black");
             }
 
-            render(): ScreensaverDialog {
+            render(): this {
                 let templateFile = CDP.Framework.toUrl("/templates/dialogs.html");
                 let jst = CDP.Tools.Template.getJST("#screensaver-setting-dialog", templateFile);
 
