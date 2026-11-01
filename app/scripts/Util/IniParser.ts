@@ -31,6 +31,7 @@ namespace Garage {
          *  - name[]=value      : 配列に追加
          *  - name[key]=value   : オブジェクトに追加
          *  - 上記に一致しない行 (; # // で始まるコメント行など) は無視する
+         *  - プロトタイプ汚染を防ぐため、__proto__ / constructor / prototype という名前のセクション・パラメーターは無視する
          */
         export class IniParser {
             private static SECTION_KEY = /^\s*\[\s*([^\]]*)\s*\]\s*$/;
@@ -39,6 +40,21 @@ namespace Garage {
             private static PARAM_KEY = /^\s*([\w\.\-\_]+)\s*=\s*(.*?)\s*$/;
             private static PARAM_ARR = /^\s*([\w\.\-\_]+)\[\]\s*=\s*(.*?)\s*$/;
             private static PARAM_OBJ = /^\s*([\w\.\-\_]+)\[(\w+)\]\s*=\s*(.*?)\s*$/;
+            private static UNSAFE_NAMES = ["__proto__", "constructor", "prototype"];
+
+            /**
+             * プロトタイプ汚染につながる名前かどうか
+             */
+            private static isUnsafeName(...names: string[]): boolean {
+                return names.some((name) => IniParser.UNSAFE_NAMES.indexOf(name) >= 0);
+            }
+
+            /**
+             * obj が name という名前のプロパティを自身に持つかどうか (継承したプロパティは含まない)
+             */
+            private static has(obj: any, name: string): boolean {
+                return Object.prototype.hasOwnProperty.call(obj, name);
+            }
 
             /**
              * INI ファイルを読み込んでパースする
@@ -56,18 +72,18 @@ namespace Garage {
              */
             static parse(text: string): any {
                 let result: any = {};
-                // 現在のセクション (name が undefined の場合はトップレベル)
+                // 現在のセクション (name が undefined の場合はトップレベル、type が "skip" の場合は無視するセクション)
                 let section: { type?: string, name?: string, index?: number, key?: string } = {};
                 // 現在のセクションでパラメーターを格納するオブジェクト
                 let target = (): any => {
                     switch (section.type) {
                         case "arr":
-                            if (result[section.name][section.index] === undefined) {
+                            if (!IniParser.has(result[section.name], String(section.index))) {
                                 result[section.name][section.index] = {};
                             }
                             return result[section.name][section.index];
                         case "obj":
-                            if (result[section.name][section.key] === undefined) {
+                            if (!IniParser.has(result[section.name], section.key)) {
                                 result[section.name][section.key] = {};
                             }
                             return result[section.name][section.key];
@@ -81,13 +97,21 @@ namespace Garage {
 
                     // セクション
                     if ((match = line.match(IniParser.SECTION_KEY))) {
+                        if (IniParser.isUnsafeName(match[1])) {
+                            section = { type: "skip", name: match[1] };
+                            continue;
+                        }
                         section = { type: "key", name: match[1] };
-                        if (result[section.name] === undefined) {
+                        if (!IniParser.has(result, section.name)) {
                             result[section.name] = {};
                         }
                     } else if ((match = line.match(IniParser.SECTION_ARR))) {
+                        if (IniParser.isUnsafeName(match[1])) {
+                            section = { type: "skip", name: match[1] };
+                            continue;
+                        }
                         let index = 0;
-                        if (result[match[1]] === undefined) {
+                        if (!IniParser.has(result, match[1])) {
                             result[match[1]] = [{}];
                         } else if (section.type === "arr" && section.name === match[1]) {
                             index = section.index + 1;
@@ -96,7 +120,11 @@ namespace Garage {
                         }
                         section = { type: "arr", name: match[1], index: index };
                     } else if ((match = line.match(IniParser.SECTION_OBJ))) {
-                        if (result[match[1]] === undefined) {
+                        if (IniParser.isUnsafeName(match[1], match[2])) {
+                            section = { type: "skip", name: match[1] };
+                            continue;
+                        }
+                        if (!IniParser.has(result, match[1])) {
                             result[match[1]] = {};
                             result[match[1]][match[2]] = {};
                         }
@@ -104,21 +132,33 @@ namespace Garage {
                     }
 
                     // パラメーター
+                    if (section.type === "skip") {
+                        continue;
+                    }
                     if ((match = line.match(IniParser.PARAM_KEY))) {
+                        if (IniParser.isUnsafeName(match[1])) {
+                            continue;
+                        }
                         if (section.name === undefined) {
                             result[match[1]] = match[2];
                         } else {
                             target()[match[1]] = match[2];
                         }
                     } else if ((match = line.match(IniParser.PARAM_ARR))) {
+                        if (IniParser.isUnsafeName(match[1])) {
+                            continue;
+                        }
                         let values = section.name === undefined ? result : target();
-                        if (values[match[1]] === undefined) {
+                        if (!IniParser.has(values, match[1])) {
                             values[match[1]] = [];
                         }
                         values[match[1]].push(match[2]);
                     } else if ((match = line.match(IniParser.PARAM_OBJ))) {
+                        if (IniParser.isUnsafeName(match[1], match[2])) {
+                            continue;
+                        }
                         let values = section.name === undefined ? result : target();
-                        if (values[match[1]] === undefined) {
+                        if (!IniParser.has(values, match[1])) {
                             values[match[1]] = {};
                         }
                         values[match[1]][match[2]] = match[3];

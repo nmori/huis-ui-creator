@@ -117,6 +117,9 @@ namespace Garage {
                 this.remoteInfos_ = remoteInfos;
 
                 // Common のリモコンを読み込む
+                // 接続している本体のファームウェアに応じて内容 (ジャンプボタンの有無) が変わるため、
+                // 再接続で別の本体がつながった場合に備えて毎回読み込み直す
+                this.commonRemoteInfo_ = null;
                 this.loadCommonFace();
 
                 this.phnConfig_ = PhnConfigFile.loadFromFile(this.huisFilesRoot_);

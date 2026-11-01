@@ -26,6 +26,11 @@ function option(name, defaultValue) {
 
 const platform = option("platform", process.platform);
 const arch = option("arch", process.arch);
+// npm / node-gyp へそのまま渡すため、想定外の値は受け付けない
+if (!["win32", "darwin", "linux"].includes(platform) || !["x64", "ia32", "arm64"].includes(arch)) {
+    console.error(`[package] unsupported platform/arch: ${platform}-${arch}`);
+    process.exit(1);
+}
 
 function log(message) {
     console.log("[package] " + message);
@@ -38,12 +43,24 @@ execFileSync(process.execPath, [path.join(ROOT, "build", "build.mjs"), "--releas
 log(`npm install --omit=dev (${platform}-${arch})`);
 fs.rmSync(path.join(WWW, "node_modules"), { recursive: true, force: true });
 fs.rmSync(path.join(WWW, "package-lock.json"), { force: true });
-const npmCli = path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js");
-execFileSync(process.execPath, [
-    fs.existsSync(npmCli) ? npmCli : process.env.npm_execpath,
+const npmArgs = [
     "install", "--omit=dev", "--install-links", "--ignore-scripts", "--no-audit", "--no-fund", "--no-package-lock",
     `--os=${platform}`, `--cpu=${arch}`,
-], { cwd: WWW, stdio: "inherit" });
+];
+// npm-cli.js の場所: npm run 経由なら npm_execpath、それ以外は node と同梱の npm
+// (Windows: <node のディレクトリ>/node_modules、macOS/Linux: <prefix>/lib/node_modules)
+const nodeDir = path.dirname(process.execPath);
+const npmCli = [
+    process.env.npm_execpath,
+    path.join(nodeDir, "node_modules", "npm", "bin", "npm-cli.js"),
+    path.join(nodeDir, "..", "lib", "node_modules", "npm", "bin", "npm-cli.js"),
+].find((p) => p && /\.c?js$/.test(p) && fs.existsSync(p));
+if (npmCli) {
+    execFileSync(process.execPath, [npmCli, ...npmArgs], { cwd: WWW, stdio: "inherit" });
+} else {
+    // 見つからない場合は PATH 上の npm を使う (Windows の npm.cmd はシェル経由でないと起動できない)
+    execFileSync("npm", npmArgs, { cwd: WWW, stdio: "inherit", shell: process.platform === "win32" });
+}
 
 // usb_dev (Windows のみ) は対象 arch 向けにビルドし、実行に必要な .node 以外のビルド成果物は削除する
 const usbDevDir = path.join(WWW, "node_modules", "usb_dev");
