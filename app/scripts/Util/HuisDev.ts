@@ -102,7 +102,6 @@ namespace Garage {
                             pathes[i] = p.replace(re, "");
                         });
                         df.resolve(pathes.reverse());
-                        setTimeout(proc);
                         return;
                     }
 
@@ -277,6 +276,34 @@ namespace Garage {
             }
 
             /**
+             * 読み取り専用のファイルやフォルダを含んでいても削除する。
+             * Windows では読み取り専用のフォルダ (HUIS の favorite/modules など) を含むと
+             * fs.removeSync が EPERM で失敗するため、書き込み可能にしてから削除し直す。
+             * (旧 fs-extra では内部の rimraf が同様の処理を行っていた)
+             */
+            function removeSyncForce(targetPath: string): void {
+                try {
+                    fs.removeSync(targetPath);
+                } catch (err) {
+                    if (err.code !== "EPERM" && err.code !== "EACCES") {
+                        throw err;
+                    }
+                    makeWritableSync(targetPath);
+                    fs.removeSync(targetPath);
+                }
+            }
+
+            function makeWritableSync(targetPath: string): void {
+                let stat = fs.lstatSync(targetPath);
+                fs.chmodSync(targetPath, stat.mode | 0o222);
+                if (stat.isDirectory()) {
+                    for (let name of fs.readdirSync(targetPath)) {
+                        makeWritableSync(Util.PathManager.join(targetPath, name));
+                    }
+                }
+            }
+
+            /**
              * @class FileSyncTask
              * @brief HUIS と PC のファイル同期を行う。同期中のキャンセル対応。
              */
@@ -444,7 +471,7 @@ namespace Garage {
                                 .then(() => {
                                     df.resolve();
                                     fs.remove(emptyDirectory);
-                                    fs.removeSync(targetDirectoryPath);
+                                    removeSyncForce(targetDirectoryPath);
 
                                     if (callback) {
                                         callback(null);
@@ -530,7 +557,6 @@ namespace Garage {
                                 .fail((err) => {
                                     df.reject(err);
                                 });
-                            df.resolve();
                             return CDP.makePromise(df);
                         }).fail((err) => {
                             callback(err);
@@ -652,13 +678,8 @@ namespace Garage {
                                 if (fs.existsSync(filePath)) {
                                     let fileStat = fs.lstatSync(filePath);
                                     if (fileStat) {
-                                        if (fileStat.isDirectory()) {
-                                            console.log("remove: " + file);
-                                            fs.removeSync(filePath);
-                                        } else {
-                                            console.log("unlinkSync: " + file);
-                                            fs.unlinkSync(filePath);
-                                        }
+                                        console.log("remove: " + file);
+                                        removeSyncForce(filePath);
                                     } else {
                                         console.warn("fileStat is null: " + filePath);
                                     }
