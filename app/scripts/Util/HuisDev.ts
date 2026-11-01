@@ -295,6 +295,10 @@ namespace Garage {
 
             function makeWritableSync(targetPath: string): void {
                 let stat = fs.lstatSync(targetPath);
+                // chmod はリンク先に作用するため、シンボリックリンクは変更せずにそのまま削除させる
+                if (stat.isSymbolicLink()) {
+                    return;
+                }
                 fs.chmodSync(targetPath, stat.mode | 0o222);
                 if (stat.isDirectory()) {
                     for (let name of fs.readdirSync(targetPath)) {
