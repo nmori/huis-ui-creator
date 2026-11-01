@@ -16,8 +16,8 @@
 
 /// <reference path="../../include/interfaces.d.ts" />
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
 
         namespace ConstValue {
             export const BOTTOM_PAGE_FRAME_DEFAULT_POSITION: number = 173;
@@ -452,8 +452,8 @@ module Garage {
              * @param dialog {SelectRemotePageDialog}
              * @param event {Event} クリックイベント
              */
-            private selectClickedFacePage(dialog: SelectRemotePageDialog, event: Event) {
-                let $facePagesArea = $(event.currentTarget);
+            private selectClickedFacePage(dialog: SelectRemotePageDialog, event: JQuery.TriggeredEvent) {
+                let $facePagesArea = $(event.currentTarget as HTMLElement);
                 let $selectedPage = this.getClickedPageFromFacePagesArea($facePagesArea, event);
 
                 if ($selectedPage.hasClass("selected")) {
@@ -492,8 +492,8 @@ module Garage {
              * @param $facePagesArea {JQuery}
              * @param event {Event}
              */
-            private getClickedPageFromFacePagesArea($facePagesArea: JQuery, event: Event): JQuery {
-                let origin = $(event.target);
+            private getClickedPageFromFacePagesArea($facePagesArea: JQuery, event: JQuery.TriggeredEvent): JQuery {
+                let origin = $(event.target as HTMLElement);
                 if (origin.is('#face-pages-area')) {
                     // face-pages-areaがクリックされた場合：クリック座標からページを算出
                     let $pages = $facePagesArea.find('.face-page');
@@ -511,7 +511,7 @@ module Garage {
                     return origin;
                 } else {
                     // face-pageの子孫がクリックされた場合
-                    return $(event.target).parents('.face-page');
+                    return $(event.target as HTMLElement).parents('.face-page');
                 }
             }
 
@@ -572,8 +572,8 @@ module Garage {
              *
              * @param event {Event}
              */
-            private onScrollFaceContainer(event: Event) {
-                let $faceContainer = $(event.currentTarget);
+            private onScrollFaceContainer(event: JQuery.TriggeredEvent) {
+                let $faceContainer = $(event.currentTarget as HTMLElement);
                 SelectRemotePageDialog.controlGradationAreaDisplay($faceContainer);
                 this.scrollSelectorArea($faceContainer);
             }

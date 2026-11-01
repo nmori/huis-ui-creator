@@ -18,8 +18,8 @@
 
 /* tslint:disable:max-line-length no-string-literal */
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         var TAG = "[Garage.View.PropertyArea.PreviewWindow.PreviewWindow] ";
 
@@ -33,7 +33,7 @@ module Garage {
                 this.domId_ = domId;
             }
 
-            render(): Backbone.View<Model.Item> {
+            render(): this {
                 super.render();
                 this.$el.find(this.preview_.getDomId()).append(this.preview_.render().$el);
                 this.endProcessOfRender();

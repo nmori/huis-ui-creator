@@ -16,8 +16,8 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
 
         export interface ElectronOpenFileDialogOptions {
             title?: string;
@@ -71,8 +71,8 @@ module Garage {
          * @brief Electron のダイアログを扱うための wrapper クラス
          */
         export class ElectronDialog {
-            private _dialogOwner;
-            private _dialog;
+            private _dialogOwner: ElectronShim.DialogOwner = "none";
+            private _dialog = ElectronShim.dialog;
             private _enabled = true;
             constructor() {
                 this._resetElectronDialog();
@@ -80,51 +80,45 @@ module Garage {
 
             /**
              * ファイルオープンダイアログを開く
-             * 
+             *
              * @param options {ElectronOpenFileDialogOptions} ファイルオープンダイアログのオプション
-             * @param callback {Function} ダイアログを開いた後に呼び出されるコールバック関数
+             * @param callback {Function} ダイアログを開いた後に呼び出されるコールバック関数 (キャンセル時は undefined)
              */
             showOpenFileDialog(options?: ElectronOpenFileDialogOptions, callback?: (fileNames: string[]) => void): void {
                 if (!this._enabled) {
                     return;
                 }
                 this._resetElectronDialog();
-                if (!this._dialogOwner) { // Focusがこのアプリ以外にある場合→第1引数なしで呼び出し
-                    if (this._dialog) {
-                        this._dialog.showOpenDialog(options, callback);
-                    }
-                } else { // Focusがこのアプリにある場合→第1引数つきで呼び出し
-                    if (this._dialog) {
-                        this._dialog.showOpenDialog(this._dialogOwner, options, callback);
-                    }
-                }
+                this._dialog.showOpenDialog(this._dialogOwner, options || {})
+                    .then((fileNames) => {
+                        if (callback) {
+                            callback(fileNames);
+                        }
+                    });
             }
 
             /**
              * ファイル保存ダイアログを開く
-             * 
+             *
              * @param options {ElectronSaveFileDialogOptions} ファイル保存ダイアログのオプション
-             * @param callback {Function} ダイアログを開いた後に呼び出されるコールバック関数
+             * @param callback {Function} ダイアログを開いた後に呼び出されるコールバック関数 (キャンセル時は undefined)
              */
             showSaveFileDialog(options?: ElectronSaveFileDialogOptions, callback?: (fileName: string) => void): void {
                 if (!this._enabled) {
                     return;
                 }
                 this._resetElectronDialog();
-                if (!this._dialogOwner) { // Focusがこのアプリ以外にある場合→第1引数なしで呼び出し
-                    if (this._dialog) {
-                        this._dialog.showSaveDialog(options, callback);
-                    }
-                } else { // Focusがこのアプリにある場合→第1引数つきで呼び出し
-                    if (this._dialog) {
-                        this._dialog.showSaveDialog(this._dialogOwner, options, callback);
-                    }
-                }
+                this._dialog.showSaveDialog(this._dialogOwner, options || {})
+                    .then((fileName) => {
+                        if (callback) {
+                            callback(fileName);
+                        }
+                    });
             }
 
             /**
              * メッセージダイアログを開く
-             * 
+             *
              * @param options {ElectronSaveFileDialogOptions} ファイル保存ダイアログのオプション
              * @param callback {Function} ダイアログを開いた後に呼び出されるコールバック関数
              * @return {number} クリックされたボタンのindex。
@@ -134,25 +128,8 @@ module Garage {
                 if (!this._enabled) {
                     return undefined;
                 }
-                //debugger;
                 this._resetElectronDialog();
-                if (!this._dialogOwner) { // Focusがこのアプリ以外にある場合→第1引数なしで呼び出し
-                    if (this._dialog) {
-                        if (callback) {
-                            return this._dialog.showMessageBox(options, callback);
-                        } else {
-                            return this._dialog.showMessageBox(options);
-                        }
-                    }
-                } else { // Focusがこのアプリにある場合→第1引数つきで呼び出し
-                    if (this._dialog) {
-                        if (callback) {
-                            return this._dialog.showMessageBox(this._dialogOwner, options, callback);
-                        } else {
-                            return this._dialog.showMessageBox(this._dialogOwner, options);
-                        }
-                    }
-                }
+                return this._showMessageBox(this._dialogOwner, options, callback);
             }
 
             /**
@@ -174,26 +151,28 @@ module Garage {
                 this._disableDialog();
                 // This method does NOT check enabled, because this method is called repeatedly when other dialog is displayed.
                 this._resetElectronDialog();
-                if (this._dialog) {
-                    this._enabled = true;
-                    if (callback) {
-                        return this._dialog.showMessageBox(Remote.getCurrentWindow(), options, callback);
-                    } else {
-                        return this._dialog.showMessageBox(Remote.getCurrentWindow(), options);
-                    }
+                this._enabled = true;
+                return this._showMessageBox("current", options, callback);
+            }
+
+            /**
+             * callback が指定されている場合は非同期、指定されていない場合は同期でメッセージダイアログを開く
+             */
+            private _showMessageBox(owner: ElectronShim.DialogOwner, options?: ElectronMessageBoxOptions, callback?: (response: any) => void): number {
+                if (callback) {
+                    this._dialog.showMessageBox(owner, options || {}).then(callback);
+                    return undefined;
                 }
+                return this._dialog.showMessageBoxSync(owner, options || {});
             }
 
             /**
              * Electron のダイアログを使用するための初期設定
              */
             private _resetElectronDialog() {
-                if (!this._dialogOwner) {
-                    var browserWindow = Remote.BrowserWindow;
-                    this._dialogOwner = browserWindow.getFocusedWindow(); // focusが他のアプリやDebuggerにあるとnullが返る
-                }
-                if (!this._dialog) {
-                    this._dialog = Remote.dialog; // Remote.Dialogだとクラスを返すので正しく動作しない。
+                // 一度このアプリにフォーカスがある状態でダイアログを開いた後は、常にこのウィンドウを親にする
+                if (this._dialogOwner === "none" && ElectronShim.remote.getCurrentWindow().isFocused()) {
+                    this._dialogOwner = "current"; // focusが他のアプリやDebuggerにある間は親なしで開く
                 }
             }
 

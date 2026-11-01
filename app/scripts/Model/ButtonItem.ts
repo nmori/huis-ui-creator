@@ -17,8 +17,8 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
         var TAG = "[Garage.Model.ButtonItem] ";
 
         namespace ConstValue {
@@ -251,7 +251,10 @@ module Garage {
                 if (this.name != null) {
                     convertedButton.name = this.name;
                 }
-                if (this.group != null) {
+                // ボタン単位の group は HUIS 5.0.0 以降で追加された情報のため、古い本体へは出力しない
+                // (エクスポートファイルは新しい本体でインポートされる可能性があるため常に出力する。
+                //  outputDirPath の指定があるのはエクスポート時のみで、インポート時は本体へ出力される)
+                if (this.group != null && (outputDirPath != null || Util.VersionManager.isButtonGroupSupported())) {
                     convertedButton.group = this.group;
                 }
 
@@ -409,7 +412,7 @@ module Garage {
              * 本来ならサーバーと通信するがサンプルではデータを永続化しないため、
              * destroy イベントだけ発生させる。
              */
-            /*override*/ destroy() {
+            /*override*/ destroy(): any {
                 this.trigger("destroy", this);
             }
 

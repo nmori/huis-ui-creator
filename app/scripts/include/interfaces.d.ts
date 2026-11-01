@@ -16,10 +16,6 @@
 
 
 /// <reference path="../../modules/include/frameworks.d.ts" />
-/// <reference path="../../modules/include/node.d.ts" />
-/// <reference path="../../modules/include/fs-extra.d.ts" />
-/// <reference path="../../modules/include/pixi.d.ts" />
-/// <reference path="../../modules/include/zip.js.d.ts" />
 
 /// <reference path="../Util/HuisFiles.ts" />
 /// <reference path="../Util/HuisDev.ts" />
@@ -29,6 +25,9 @@
 /// <reference path="../Util/ButtonDeviceInfoCache.ts" />
 /// <reference path="../Util/ZipManager.ts" />
 /// <reference path="../Util/StorageLock.ts" />
+/// <reference path="../Util/IniParser.ts" />
+/// <reference path="ElectronShim.ts" />
+/// <reference path="ClassCompat.ts" />
 /// <reference path="../Model/OffscreenEditor.ts" />
 /// <reference path="../Model/Module.ts" />
 /// <reference path="../Model/File/PhnConfig.ts" />
@@ -504,7 +503,7 @@ interface IRemoteInfo {
     mastarFace?: Garage.Model.Face;
 }
 
-declare module Garage {
+declare namespace Garage {
     /*
     * HUIS UI CREATOR のバージョン
     */

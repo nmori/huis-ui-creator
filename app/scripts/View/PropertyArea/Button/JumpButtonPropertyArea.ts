@@ -1,10 +1,10 @@
 ﻿/// <reference path="../../../include/interfaces.d.ts" />
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
         import Tools = CDP.Tools;
         import Framework = CDP.Framework;
-        import JQUtils = Util.JQueryUtils;
+        import JQUtils = Garage.Util.JQueryUtils;
 
         var TAG = "[Garage.View.PropertyArea.Button.JumpButtonPropertyArea] ";
 
@@ -63,7 +63,7 @@ module Garage {
              */
             private onRemotePullDownListChanged(event: Event) {
                 let FUNCTION_NAME = TAG + "onRemotePullDownListChanged";
-                let $target = $(event.currentTarget);
+                let $target = $(event.currentTarget as HTMLElement);
                 let remoteId = $target.val();
 
                 //remoteIdがない場合、処理を終了する。
@@ -92,7 +92,7 @@ module Garage {
              */
             private onPagePullDownListChanged(event: Event) {
                 let FUNCTION_NAME = TAG + "onPagePullDownListChanged";
-                let order = this.getOrderFrom($(event.currentTarget));
+                let order = this.getOrderFrom($(event.currentTarget as HTMLElement));
                 if (!this.isValidOrder(order)) {
                     console.warn(FUNCTION_NAME + "order is invalid");
                     return;
@@ -115,7 +115,7 @@ module Garage {
             /**
              * 保持しているモデルの内容で詳細エリアを描画する
              */
-            render(): Backbone.View<Model.Item> {
+            render(): this {
                 super.render();
                 let FUNCTION_NAME = TAG + ":renderView : ";
                 let targetState: Model.ButtonState = this.getModel().getDefaultState();
@@ -152,7 +152,7 @@ module Garage {
 
                 let targetStates: Model.ButtonState[] = this.getModel().cloneStates();
                 let targetState: Model.ButtonState = targetStates[this.getModel().getDefaultStateIndex()];
-                let tmpInput = this._getActionPulldownJquery(this.getModel().getDefaultStateId()).val();
+                let tmpInput = this._getActionPulldownJquery(this.getModel().getDefaultStateId()).val() as string;
                 let newAction = targetState.action[0];
                 newAction.input = tmpInput;
                 newAction.jump = this.getJumpSettings();

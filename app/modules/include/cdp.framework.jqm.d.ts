@@ -4,13 +4,8 @@
  *
  * Date: 2015-12-11T21:04:59
  */
-/// <reference path="jquery.d.ts" />
-/// <reference path="underscore.d.ts" />
-/// <reference path="backbone.d.ts" />
 /// <reference path="jquery.mobile.d.ts" />
 /// <reference path="cdp.core.d.ts" />
-/// <reference path="require.d.ts" />
-/// <reference path="i18next.d.ts" />
 /// <reference path="cdp.lazyload.d.ts" />
 declare namespace CDP {
     namespace Framework {
@@ -1204,7 +1199,7 @@ declare namespace CDP {
      * @return {Function} 以前の handler.
      */
     function setBackButtonHandler(handler: (event?: JQueryEventObject) => void): (event?: JQueryEventObject) => void;
-    module Framework {
+    namespace Framework {
         /**
          * \~english
          * Initialization function of Framework.

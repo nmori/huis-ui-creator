@@ -16,9 +16,9 @@
 
 /// <reference path="../../include/interfaces.d.ts" />
 
-module Garage {
-    export module Model {
-        export module Version {
+namespace Garage {
+    export namespace Model {
+        export namespace Version {
             export class HuisVersionString extends VersionString {
                 private TAG: string = "[Garage.Model.Version.HuisVersionString] ";
 

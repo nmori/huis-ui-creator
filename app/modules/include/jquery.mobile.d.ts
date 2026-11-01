@@ -4,7 +4,6 @@
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
 
-/// <reference path="jquery.d.ts"/>
 
 interface JQueryMobileEvent { (event: Event, ui: any): void; }
 

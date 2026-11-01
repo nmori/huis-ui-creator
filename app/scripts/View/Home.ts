@@ -15,12 +15,11 @@
 */
 
 /// <reference path="../include/interfaces.d.ts" />
-/// <reference path="../../modules/include/jquery.d.ts" />
 /// <reference path="BasePage.ts" />
 /// <reference path="Dialog/PhnConfigDialog.ts" />
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         import Framework = CDP.Framework;
         import Tools = CDP.Tools;
@@ -96,7 +95,7 @@ module Garage {
 
             private onClickFullCustomFace(event: Event) {
                 console.log("onClickFullCustomFace");
-                let $clickedFace = $(event.currentTarget);
+                let $clickedFace = $(event.currentTarget as HTMLElement);
                 let remoteId = $clickedFace.data("remoteid");
                 if (remoteId) {
                     this._enterFullCustom(remoteId);
@@ -105,7 +104,7 @@ module Garage {
 
             private onClickNotFullCustomFace(event: Event) {
                 console.log("onClickNotFullCustomFace");
-                let $clickedFace = $(event.currentTarget);
+                let $clickedFace = $(event.currentTarget as HTMLElement);
                 let remoteId = $clickedFace.data("remoteid");
                 Util.MiscUtil.showGarageToast($.i18n.t("toast.STR_TOAST_CANT_EDIT"));
             }
@@ -124,10 +123,18 @@ module Garage {
                     bz_menu.hide();
                 }
 
+                // お気に入り待受画面は古いファームウェアでは使えないため出しわける
+                let screensaverMenu: JQuery = $popup.find("#command-setting-screensabver");
+                if (Util.VersionManager.isScreensaverSupported()) {
+                    screensaverMenu.show();
+                } else {
+                    screensaverMenu.hide();
+                }
+
                 this.showOptionPullDownMenu($popup);
             }
 
-            render(): Home {
+            render(): this {
                 this._renderFaceList();
                 $('body').trigger('create');
                 return this;
@@ -374,7 +381,7 @@ module Garage {
             */
             private _onCreateNewRemoteHover(event: Event) {
 
-                var $target = $(event.currentTarget);//＋ボタンのJquery
+                var $target = $(event.currentTarget as HTMLElement);//＋ボタンのJquery
                 this.centeringTooltip($target);
             }
 

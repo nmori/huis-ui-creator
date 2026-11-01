@@ -18,8 +18,8 @@
 
 /* tslint:disable:max-line-length no-string-literal */
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         var TAG = "[Garage.View.PropertyArea.PreviewWindow.AcStatePreviewWindow] ";
 
@@ -41,6 +41,7 @@ module Garage {
                 this.preview_ = new ImagePreview(button.getStateByStateId(stateId).getDefaultImage());
             }
 
+            // @ts-expect-error Backbone は events をメソッドでも受け付ける (型定義上はプロパティ)
             events() {
                 let events = {};
                 return events;

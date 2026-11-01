@@ -16,10 +16,10 @@
 
 /// <reference path="../../include/interfaces.d.ts" />
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
         import Tools = CDP.Tools;
-        import JQUtils = Util.JQueryUtils;
+        import JQUtils = Garage.Util.JQueryUtils;
         var TAG = "[Garage.View.PhnConfig] ";
 
         export class PhnConfig extends BaseDialog<Model.PhnConfig> {
@@ -32,6 +32,7 @@ module Garage {
                 return '#dialog-config-screen';
             }
 
+            // @ts-expect-error Backbone は events をメソッドでも受け付ける (型定義上はプロパティ)
             events(): any {
                 return {
                     "change #dialog-config-radio-home-as-home": "onChangeHomeAsHomeRadio",
@@ -55,7 +56,7 @@ module Garage {
                 this.render();
             }
 
-            render(): PhnConfig {
+            render(): this {
                 let templateFile = CDP.Framework.toUrl("/templates/dialogs.html");
                 let jst = Tools.Template.getJST("#dialog-config", templateFile);
 
@@ -92,7 +93,7 @@ module Garage {
              * @param event {Event} changeイベント
              */
             private onChangeHomeAsHomeRadio(event: Event) {
-                let val: boolean = $(event.currentTarget).prop('checked');
+                let val: boolean = $(event.currentTarget as HTMLElement).prop('checked');
 
                 this.changeEnableOfChangeHomeDestButton(!val);
                 this.updateHomeDestLabel();
@@ -106,7 +107,7 @@ module Garage {
              * @param event {Event} changeイベント
              */
             private onChangeJumpAsHomeRadio(event: Event) {
-                let val: boolean = $(event.currentTarget).prop('checked');
+                let val: boolean = $(event.currentTarget as HTMLElement).prop('checked');
 
                 if (val) {
                     this.showSelectDestDialog(() => {
@@ -250,7 +251,7 @@ module Garage {
              * @param event {Event} changeイベント
              */
             private onChangeShowSettingButtonCheckbox(event: Event) {
-                let val: boolean = $(event.currentTarget).prop('checked');
+                let val: boolean = $(event.currentTarget as HTMLElement).prop('checked');
 
                 // 「非表示にする」のチェックボックスなので保存時の値としては逆を設定
                 this.model.displaySettingButton = !val;
@@ -273,7 +274,7 @@ module Garage {
              * @param event {Event} changeイベント
              */
             private onChangeShowAddButtonCheckbox(event: Event) {
-                let val: boolean = $(event.currentTarget).prop('checked');
+                let val: boolean = $(event.currentTarget as HTMLElement).prop('checked');
 
                 // 「非表示にする」のチェックボックスなので保存時の値としては逆を設定
                 this.model.displayAddButton = !val;
@@ -296,7 +297,7 @@ module Garage {
              * @param event {Event} changeイベント
              */
             private onChangeShowMoveButtonCheckbox(event: Event) {
-                let val: boolean = $(event.currentTarget).prop('checked');
+                let val: boolean = $(event.currentTarget as HTMLElement).prop('checked');
 
                 // 「非表示にする」のチェックボックスなので保存時の値としては逆を設定
                 this.model.displayRemoteArrow = !val;
@@ -319,7 +320,7 @@ module Garage {
              * @param event {Event} changeイベント
              */
             private onChangeDisableSwipeCheckbox(event: Event) {
-                let val: boolean = $(event.currentTarget).prop('checked');
+                let val: boolean = $(event.currentTarget as HTMLElement).prop('checked');
 
                 // 「無効化する」のチェックボックスなので保存時の値としては逆を設定
                 this.model.enableHorizontalRemotePageSwipe = !val;
@@ -343,7 +344,7 @@ module Garage {
              * @param event {Event}
              */
             private onChangeBlockStorageAccessCheckbox(event: Event) {
-                let val: boolean = $(event.currentTarget).prop('checked');
+                let val: boolean = $(event.currentTarget as HTMLElement).prop('checked');
                 this.model.allowAccessToStorage = !val;
 
                 this.enableSubmitButton();

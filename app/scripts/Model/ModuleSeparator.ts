@@ -17,8 +17,8 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
         var TAG = "[Garage.Model.LabelItem] ";
 
         const HORIZONTAL_LINE_IMAGE_PATH: string = "divider_pickup_custom.png";

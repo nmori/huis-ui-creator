@@ -17,8 +17,8 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
         var TAG = "[Garage.Model.LabelItem] ";
 
         // When add color definition, modify _isValidColor method
@@ -31,6 +31,11 @@ module Garage {
             export const SETTING: string = "setting";
         }
 
+        // 旧形式 (数値) のラベル色。0 (黒) - 15 (白) のグレースケール
+        const LEGACY_COLOR_BLACK: number = 0;
+        const LEGACY_COLOR_WHITE: number = 15;
+        const LEGACY_COLOR_THRESHOLD: number = 8;
+
         export class LabelItem extends Item {
 
             constructor(iLabel: ILabel) {
@@ -40,7 +45,10 @@ module Garage {
                 this.area = $.extend(true, {}, iLabel.area);
 
                 // Support for old FullCustom remote, color value was number
-                if (!this._isValidColor(this.color)) {
+                // (0 - 15 のグレースケール。UI CREATOR 3.x 以前 / HUIS 4.2.0 未満の形式)
+                if (typeof iLabel.color === "number") {
+                    this.color = ((<number><any>iLabel.color) >= LEGACY_COLOR_THRESHOLD) ? FontColor.WHITE : FontColor.BLACK;
+                } else if (!this._isValidColor(this.color)) {
                     console.warn(TAG + " font color is invalid, set black font color");
                     this.color = FontColor.DEFAULT;
                 }
@@ -76,15 +84,19 @@ module Garage {
              *
              * @param {string} remoteId このLabelItemが所属するremoteId
              * @param {string} ourputDirPath? faceファイルの出力先のディレクトリ
+             * @param {boolean} isLegacyFormat 旧形式 (ラベル色が数値) で出力する場合 true
              * @return {ILabel} 変換されたデータ
              */
-            convertToHuisData(): ILabel {
+            convertToHuisData(isLegacyFormat: boolean = false): ILabel {
 
                 let convertedLabel: ILabel = {
                     area: this.area,
                     text: this.text,
                     color: this.color
                 };
+                if (isLegacyFormat) {
+                    (<any>convertedLabel).color = (this.color === FontColor.WHITE) ? LEGACY_COLOR_WHITE : LEGACY_COLOR_BLACK;
+                }
                 if (this.font !== undefined) {
                     convertedLabel.font = this.font;
                 }

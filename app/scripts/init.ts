@@ -35,20 +35,22 @@ var Patch: any;
 
 })(this, Patch || (Patch = {}));
 
-module Garage {
+namespace Garage {
     var setup = (callback: Function): void => {
         Patch.apply();
         var global = global || window;
 
-        fs = require("fs-extra");
-        path = require("path");
+        // これらはグローバル変数 (strict mode のため globalThis に明示的に定義する)
+        globalThis.fs = require("fs-extra");
+        globalThis.path = require("path");
 
-        Remote = require("electron").remote;
-        app = require("electron").remote.app;
-        Menu = require("electron").remote.Menu;
-        MenuItem = require("electron").remote.MenuItem;
+        // Electron の remote モジュールの代替 (include/ElectronShim.ts)
+        globalThis.Remote = ElectronShim.remote;
+        globalThis.app = ElectronShim.app;
+        globalThis.Menu = ElectronShim.Menu;
+        globalThis.MenuItem = ElectronShim.MenuItem;
 
-        node_crypt = Remote.require('crypto');
+        globalThis.node_crypt = require("crypto");
 
         //このアプリのバージョン :　MajorVersion.MinorVersion.BuildNumber.Reversion
 
@@ -239,7 +241,7 @@ module Garage {
 
     var loadUtils = (callback: Function): void => {
         // Util のロードと初期化
-        requirejs(["pixi",
+        requirejs([
             "garage.model.offscreeneditor",
             "garage.util.huisfiles",
             "garage.util.electrondialog",
@@ -249,8 +251,10 @@ module Garage {
             "garage.util.zipmanager",
             "garage.util.itemclipboard",
             "garage.util.phnconfigfile",
-            "garage.util.pathmanager"],
+            "garage.util.pathmanager",
+            "garage.util.iniparser"],
             () => {
+                ClassCompat.apply();
                 initPath();
                 try {
                     electronDialog = new Util.ElectronDialog();
@@ -260,11 +264,12 @@ module Garage {
                 }
                 callback();
             },
-            (err: RequireError) => {
+            (err: any) => {
                 console.error("init.ts loadUtils failed. " + err);
                 //load trouble, retry
                 requirejs(err.requireModules,
                     () => {
+                        ClassCompat.apply();
                         initPath();
                         try {
                             electronDialog = new Util.ElectronDialog();
@@ -274,7 +279,7 @@ module Garage {
                         }
                         callback();
                     },
-                    (err: RequireError) => {
+                    (err: any) => {
                         console.error("retry failed..." + err);
                     }
 

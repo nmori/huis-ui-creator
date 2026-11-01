@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "module": "esnext",
+    "types": ["node", "jquery", "backbone", "underscore"],
+    "strict": false,
+    "noImplicitAny": false,
+    "useDefineForClassFields": false,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "rootDir": "app/scripts",
+    "outDir": "www/app/scripts",
+    "newLine": "crlf"
+  },
+  "include": [
+    "app/scripts/**/*.ts",
+    "app/modules/include/*.d.ts"
+  ]
+}

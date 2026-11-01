@@ -1,7 +1,7 @@
 ﻿/// <referecen path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
 
         /**
          * phnconfig.ini ファイル操作クラス
@@ -51,8 +51,7 @@ module Garage {
                     return PhnConfigFile.createDefaultData();
                 }
 
-                let nodeIni = require("node-ini");
-                let confData = nodeIni.parseSync(confFilePath);
+                let confData = Util.IniParser.parseFileSync(confFilePath);
                 if (!confData) {
                     console.error(PhnConfigFile.TAG + "_loadFromFile() [parseError] " + confFilePath);
                     return PhnConfigFile.createDefaultData();
@@ -163,7 +162,7 @@ module Garage {
                     df.resolve();
                 } catch (e) {
                     console.error(PhnConfigFile.TAG + 'failed to output: ' + e);
-                    df.fail();
+                    df.reject();
                 }
             }
         }

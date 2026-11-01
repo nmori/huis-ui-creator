@@ -16,7 +16,7 @@
 
 /// <reference path="include/interfaces.d.ts" />
 
-module Config {
+namespace Config {
 
     var global = global || window;
 
@@ -34,14 +34,17 @@ module Config {
         paths: {
             // external modules
             "backbone": "modules/backbone/scripts/backbone",
-            "hogan": "modules/hogan/scripts/hogan",
-            "i18n": "modules/i18next/scripts/i18next",
             "jquery": "modules/jquery/scripts/jquery",
+            "jquery-migrate": "modules/jquery/scripts/jquery-migrate",
             "jquery.mobile": "modules/jquery/scripts/jquery.mobile",
-            "modernizr": "modules/modernizr/scripts/modernizr",
+            "mustache": "modules/mustache/scripts/mustache",
             "underscore": "modules/underscore/scripts/underscore",
-            "pixi": "modules/pixi/scripts/pixi",
-            "zip": "modules/zip/scripts/zip",
+
+            // compatibility layers for external modules
+            "jquery-compat": "scripts/include/JQueryCompat",
+            "underscore-compat": "scripts/include/UnderscoreCompat",
+            "hogan": "scripts/include/HoganCompat",
+            "i18n": "scripts/include/I18nCompat",
 
             // cdp modules
             "cdp.core": "modules/sony/cdp/scripts/cdp.core",
@@ -67,6 +70,7 @@ module Config {
             "garage.util.itemclipboard": "scripts/Util/ItemClipboard",
             "garage.util.phnconfigfile": "scripts/Util/PhnConfigFile",
             "garage.util.pathmanager": "scripts/Util/PathManager",
+            "garage.util.iniparser": "scripts/Util/IniParser",
             "garage.model.offscreeneditor": "scripts/Model/OffscreenEditor",
             "garage.view.fullcustomcommand": "scripts/View/FullCustomCommand",
             "garage.view.exportmanager": "scripts/View/ExportManager",
@@ -81,13 +85,19 @@ module Config {
             "waitSeconds": 100,
         },
 
+        // "jquery" の参照は jquery-migrate を適用した jquery-compat に、
+        // "underscore" の参照はグローバルの _ を定義する underscore-compat に向ける
+        map: {
+            "*": { "jquery": "jquery-compat", "underscore": "underscore-compat" },
+            "jquery-compat": { "jquery": "jquery" },
+            "jquery-migrate": { "jquery": "jquery" },
+            "underscore-compat": { "underscore": "underscore" },
+        },
+
         shim: {
             /* <ATELIERMARKUP type="require-shim" /> */
-            "zip": {
-                init: function () {
-                    zip.workerScriptsPath = requireConfig.baseUrl + "modules/zip/scripts/";
-                }
-            },
+            // HuisDev は読み込み時に MiscUtil を使用する
+            "garage.util.huisdev": { deps: ["garage.util.miscutil"] },
         },
     };
     // global export
@@ -123,6 +133,7 @@ module Config {
 
     // build configuration symbol
     export var DEBUG = ((): boolean => {
-        return !!("%% buildsetting %%");    //! returns "false" on release build
+        const buildsetting: string = "%% buildsetting %%";   //! release ビルドでは "" に置換される
+        return !!buildsetting;
     })();
 }

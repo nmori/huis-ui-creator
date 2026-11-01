@@ -4,7 +4,6 @@
  *
  * Date: 2015-11-27T17:22:17
  */
-/// <reference path="jquery.d.ts" />
 declare namespace CDP {
     /**
      * @interface IPromise

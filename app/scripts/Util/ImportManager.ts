@@ -17,8 +17,8 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
         let TAG = "[ImportManager]";
         import IPromise = CDP.IPromise;
 
@@ -96,6 +96,15 @@ module Garage {
 
                                 //展開されたリモコンのremoteIdを取得
                                 let decompressedRemoteId = this.getDecompressedRemoteId(dirPath);
+
+                                //接続している本体で扱えないリモコンの場合は中断する
+                                let unsupportedMessage: string = this.getUnsupportedRemoteMessage(dirPath, decompressedRemoteId);
+                                if (unsupportedMessage) {
+                                    let df = $.Deferred<void>();
+                                    df.reject(new Error("unsupported remote for connected HUIS"), unsupportedMessage);
+                                    return CDP.makePromise(df);
+                                }
+
                                 return this.convertByNewRemoteIdInfo(dirPath, decompressedRemoteId);
 
                             }).then(() => {
@@ -142,6 +151,34 @@ module Garage {
 
 
                     });
+            }
+
+            /**
+             * 接続している HUIS 本体のソフトウェアでは扱えないリモコンかどうかを判定する。
+             * @param dirPath {string} 展開されたフォルダのパス
+             * @param decompressedRemoteId {string} 展開されたリモコンのremoteId
+             * @return {string} 扱えない場合はエラーメッセージ、扱える場合は null
+             */
+            private getUnsupportedRemoteMessage(dirPath: string, decompressedRemoteId: string): string {
+                // プリセットリモコン (master face 付き) のインポートは UI CREATOR 4.0.0 以降の機能
+                if (Util.VersionManager.isLegacyFormat()) {
+                    let masterFacePath = Util.PathManager.join(dirPath, decompressedRemoteId, "master_" + decompressedRemoteId + ".face");
+                    if (fs.existsSync(masterFacePath)) {
+                        return $.i18n.t("dialog.message.STR_GARAGE_DIALOG_MESSAGE_IMPORT_FAIL") + $.i18n.t("dialog.message.STR_DIALOG_MESSAGE_IMPORT_PRESET_NOT_SUPPORTED");
+                    }
+                }
+
+                if (!Util.VersionManager.isJumpSupported()) {
+                    let face: Model.Face = this.readDecompressedFile(dirPath, decompressedRemoteId + ".face", decompressedRemoteId);
+                    let hasJumpButton = face != null && face.modules != null && face.modules.some((module) => {
+                        return module.button != null && module.button.some((button) => button.isJumpButton());
+                    });
+                    if (hasJumpButton) {
+                        return $.i18n.t("dialog.message.STR_GARAGE_DIALOG_MESSAGE_IMPORT_FAIL") + $.i18n.t("dialog.message.STR_DIALOG_MESSAGE_IMPORT_JUMP_NOT_SUPPORTED");
+                    }
+                }
+
+                return null;
             }
 
             /**

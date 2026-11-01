@@ -18,8 +18,8 @@
 
 /* tslint:disable:max-line-length no-string-literal */
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         var TAG = "[Garage.View.PropertyArea.PropertyArea] ";
 
@@ -37,6 +37,7 @@ module Garage {
                 this.commandManager_ = commandManager;
             }
 
+            // @ts-expect-error Backbone は events をメソッドでも受け付ける (型定義上はプロパティ)
             events() {
                 // Please add events
                 return {
@@ -49,7 +50,7 @@ module Garage {
                 $(document).find("article").focus();
             }
 
-            render(): Backbone.View<Model.Item> {
+            render(): this {
                 super.render();
                 this.$el.find(this.previewWindow_.getDomId()).append(this.previewWindow_.render().$el);
                 this._adaptJqueryMobileStyleToPulldown(this.$el);

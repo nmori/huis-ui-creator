@@ -18,8 +18,8 @@
 
 /* tslint:disable:max-line-length no-string-literal */
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         var TAG = "[Garage.View.PropertyArea.PreviewWindow.Preview.TextPreview] ";
 
@@ -52,7 +52,8 @@ module Garage {
             }
 
 
-            events() {
+            // @ts-expect-error Backbone は events をメソッドでも受け付ける (型定義上はプロパティ)
+            events(): any {
                 // Please add events
                 let events: Object = {};
                 events[Events.CHANGE_WITH_DIVIDER + ConstValue.SIZE_PULLDOWN_SELECT_DOM_ID] = "_onTextSizePulldownChanged";
@@ -74,7 +75,7 @@ module Garage {
             private _onTextFieldChanged(event: Event) {
                 let FUNCTION_NAME = TAG + "_onTextFieldChanged : ";
 
-                var $target = $(event.currentTarget);
+                var $target = $(event.currentTarget as HTMLElement);
                 var value: any = $target.val();
                 //禁則文字がある場合、表示を取り消す。
                 let filteredString: string = Util.MiscUtil.getRemovedInhibitionWords(value);
@@ -85,7 +86,7 @@ module Garage {
                 this.trigger(PropertyAreaEvents.Label.UI_CHANGE_TEXT);//PropertyAreaでUIの変更イベント発火を探知される。
             }
 
-            render(option?: any): Backbone.View<Model.Item> {
+            render(option?: any): this {
                 super.render();
                 //render size pulldown
                 let templateTextSizePulldown = CDP.Tools.Template.getJST(ConstValue.TEMPLATE_SIZE_PULLDOWN_DOM_ID, this._getTemplateFilePath());
@@ -122,21 +123,21 @@ module Garage {
              * @return {number} テキストサイズ変更用プルダウンの値を取得する。
              */
             getTextSize(): number {
-                return this.$el.find(ConstValue.SIZE_PULLDOWN_SELECT_DOM_ID).val();
+                return (this.$el.find(ConstValue.SIZE_PULLDOWN_SELECT_DOM_ID).val() as any);
             }
 
             /**
              * @return {number} テキストサイズ変更用プルダウンの値を取得する。
              */
             getTextColor(): string {
-                return this.$el.find(ConstValue.COLOR_PULLDOWN_SELECT_DOM_ID).val();
+                return (this.$el.find(ConstValue.COLOR_PULLDOWN_SELECT_DOM_ID).val() as string);
             }
 
             /**
              * @return {string} テキストフィールドの値を取得する。
              */
             getText(): string {
-                return this.$el.find(ConstValue.TEXT_FIELD_DOM_ID).val();
+                return (this.$el.find(ConstValue.TEXT_FIELD_DOM_ID).val() as string);
             }
 
             /**

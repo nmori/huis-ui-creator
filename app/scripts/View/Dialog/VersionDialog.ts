@@ -16,8 +16,8 @@
 
 /// <reference path="../../include/interfaces.d.ts" />
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
         var TAG: string = "[Garage.View.VersionDialog] ";
 
         export class VersionDialog extends BaseDialog<Model.VersionDialog> {
@@ -30,6 +30,7 @@ module Garage {
                 return '#about-dialog-back';
             }
 
+            // @ts-expect-error Backbone は events をメソッドでも受け付ける (型定義上はプロパティ)
             events(): any {
                 return {
                     "click #dialog-about-button-ok": "close",
@@ -42,7 +43,7 @@ module Garage {
                 this.render();
             }
 
-            render(): VersionDialog {
+            render(): this {
                 let templateFile = CDP.Framework.toUrl("/templates/dialogs.html");
                 let jst = CDP.Tools.Template.getJST("#dialog-about", templateFile);
 
@@ -71,12 +72,12 @@ module Garage {
             }
 
             openLink(event: Event) {
-                let anchor = $(event.currentTarget);
+                let anchor = $(event.currentTarget as HTMLElement);
                 let href = Util.MiscUtil.getAppropriatePath(anchor.prop('href'));
                 console.log(TAG + ' open link: ' + href);
 
                 var shell = require('electron').shell;
-                shell.openItem(href);
+                shell.openPath(href);
 
                 event.stopPropagation();
                 event.preventDefault();

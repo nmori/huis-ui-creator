@@ -16,10 +16,10 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
         import Tools = CDP.Tools;
-        import JQUtils = Util.JQueryUtils;
+        import JQUtils = Garage.Util.JQueryUtils;
         var TAG = "[Garage.View.ModuleSeparator] ";
 
         // const values
@@ -41,7 +41,7 @@ module Garage {
                 this.moduleName_ = moduleName;
             }
 
-            render(): ModuleSeparator {
+            render(): this {
 
                 let moduleSeparatorModel = new Model.ModuleSeparator(this.moduleName_);
                 let $moduleSeparator = $(this.template_(moduleSeparatorModel));

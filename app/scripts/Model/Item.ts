@@ -17,14 +17,14 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
 
         const TAG: string = "[Garage.Model.Item] ";
 
         export abstract class Item extends Backbone.Model implements ItemModel {
-            public properties: string[];
-            public itemType: string;
+            abstract get properties(): string[];
+            abstract get itemType(): string;
             private position: Model.Position;
 
             constructor(attributes?: any, options?: any) {

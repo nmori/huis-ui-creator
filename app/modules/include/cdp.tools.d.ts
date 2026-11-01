@@ -4,8 +4,6 @@
  *
  * Date: 2015-11-27T17:22:17
  */
-/// <reference path="jquery.d.ts" />
-/// <reference path="underscore.d.ts" />
 /**
  * @file  Utils.
  * @brief Tools 専用のユーティリティ
@@ -17,7 +15,7 @@ declare namespace CDP {
 }
 declare namespace CDP {
     namespace Tools {
-        module Blob {
+        namespace Blob {
             /**
              * ArrayBuffer to Blob
              *

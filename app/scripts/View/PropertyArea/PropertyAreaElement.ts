@@ -18,8 +18,8 @@
 
 /* tslint:disable:max-line-length no-string-literal */
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         var TAG = "[Garage.View.PropertyArea.PropertyAreaElement] ";
 
@@ -76,7 +76,7 @@ module Garage {
                 this.template_ = CDP.Tools.Template.getJST(templateDomId, this._getTemplateFilePath());
             }
 
-            render(option?: any): Backbone.View<Model.Item> {
+            render(option?: any): this {
                 this.undelegateEvents(); //DOM更新前に、イベントをアンバインドしておく。
                 this.$el.children().remove();
                 this.$el.append(this.template_(this.getModel()));

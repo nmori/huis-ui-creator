@@ -15,14 +15,14 @@
 */
 
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
 
         /**
         * @class HuisDev
         * @brief HUIS と    Grage 間でファイルのやりとりをするためのAPIを提供するユーティリティー
         */
-        export module HuisDev {
+        export namespace HuisDev {
             import Dialog = CDP.UI.Dialog;
             import DialogOptions = CDP.UI.DialogOptions;
 
@@ -208,7 +208,7 @@ module Garage {
                 }, () => {
                     df.reject();
                 }).then((pathes) => {
-                    dir2Files = pathes;
+                    dir2Files = <string[]>pathes;
 
                     if (filter != null) {
                         dir1Files = dir1Files.filter(filter);
@@ -611,7 +611,7 @@ module Garage {
                         file = files.shift();
                         try {
                             this._checkCancel();
-                            let option: CopyOptions = {
+                            let option: import("fs-extra").CopyOptionsSync = {
                                 preserveTimestamps: true,
                                 // TODO: move filter logic out of this method
                                 // ボタンデバイス情報のキャッシュファイルは本体に送らない

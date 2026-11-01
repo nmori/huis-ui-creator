@@ -18,8 +18,8 @@
 
 /* tslint:disable:no-string-literal */
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
         var TAG = "[Garage.Model.Module] ";
 
         export class Module extends Backbone.Model {
@@ -96,7 +96,7 @@ module Garage {
                 return true;
             }
 
-            clone() {
+            clone(): any {
                 let cloneModule: Model.Module = $.extend(true, {}, this);
 
                 cloneModule.button = [];
@@ -165,13 +165,20 @@ module Garage {
                     area: this.area,
                 };
 
-                let versionString: string = this.getModuleVersion();
+                // 古い本体へ出力する場合は UI CREATOR 3.x と同じ形式にする
+                // (group を出力せず、version は含まれるアイテムの最も古いバージョン)
+                // outputDirPath の指定があるのはエクスポート時のみで、それ以外は本体へ出力される
+                let isLegacyFormat: boolean = (outputDirPath == null) && Util.VersionManager.isLegacyFormat();
+
+                let versionString: string = this.getModuleVersion(isLegacyFormat);
                 if (versionString != null) {
                     module = {
                         version: versionString,
                         area: this.area,
-                        group: this.group
                     };
+                    if (!isLegacyFormat) {
+                        module.group = this.group;
+                    }
                 }
 
                 module.button = [];
@@ -191,7 +198,7 @@ module Garage {
                 module.label = [];
                 if (this.label) {
                     for (let label of this.label) {
-                        module.label.push(label.convertToHuisData());
+                        module.label.push(label.convertToHuisData(isLegacyFormat));
                     }
                 }
                 return module;
@@ -272,9 +279,10 @@ module Garage {
 
             /*
              * モジュール内に含まれるItemの最も新しいバージョン情報を返す
+             * @param {boolean} useOldest 最も古いバージョン情報を返す場合 true (UI CREATOR 3.x 以前の仕様)
              * @return {string} 最も新しいバージョン
              */
-            private getLatestVersionOf(): Model.Version.ModuleVersionString {
+            private getLatestVersionOf(useOldest: boolean = false): Model.Version.ModuleVersionString {
                 let latestVersion: Model.Version.ModuleVersionString = null;
 
                 let items: Model.Item[] = [];
@@ -285,7 +293,11 @@ module Garage {
                 for (let item of items) {
                     if (item.version != null) {
                         let itemVersion = new Model.Version.ModuleVersionString(item.version);
-                        latestVersion = this.getLaterVersionOf(latestVersion, itemVersion);
+                        if (useOldest) {
+                            latestVersion = (latestVersion == null || itemVersion.isOlderThan(latestVersion)) ? itemVersion : latestVersion;
+                        } else {
+                            latestVersion = this.getLaterVersionOf(latestVersion, itemVersion);
+                        }
                     }
                 }
 
@@ -294,12 +306,13 @@ module Garage {
 
             /*
              * moduleの構成要素(button,label,image)のバージョンから、最も新しいバージョンを返す。
+             * @param {boolean} useOldest 最も古いバージョン情報を返す場合 true (UI CREATOR 3.x 以前の仕様)
              * @return {string} module内のもっとも新しいバージョン情報。１つもバージョン情報を持ってない場合、nullを返す。
              */
-            public getModuleVersion(): string {
+            public getModuleVersion(useOldest: boolean = false): string {
                 let FUNCTION_NAME: string = TAG + " : getModuleVersion : ";
 
-                let latestVersion: Model.Version.ModuleVersionString = this.getLatestVersionOf();
+                let latestVersion: Model.Version.ModuleVersionString = this.getLatestVersionOf(useOldest);
 
                 if (latestVersion != null) {
                     let latestVersionString: string = latestVersion.getVersionString();
@@ -504,7 +517,7 @@ module Garage {
             get group(): IGroup { return this.get("group"); }
             set group(val: IGroup) { this.set("group", val); }
 
-            defaults() {
+            defaults(): any {
                 var module: IModule = {
                     area: { x: 0, y: 0, w: 0, h: 0 },
                 };

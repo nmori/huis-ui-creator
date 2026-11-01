@@ -17,8 +17,8 @@
 /// <reference path="../include/interfaces.d.ts" />
 /// <reference path="Module.ts" />
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
         var TAG = "[Garage.Model.ModulesCollection] ";
 
         /**

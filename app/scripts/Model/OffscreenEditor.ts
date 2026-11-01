@@ -14,12 +14,12 @@
     limitations under the License.
 */
 
-/// <reference path="../include/Interfaces.d.ts" />
+/// <reference path="../include/interfaces.d.ts" />
 
 /* tslint:disable:max-line-length */
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
 
         import IPromise = CDP.IPromise;
         //import makePromise = CDP.makePromise;
@@ -48,25 +48,18 @@ module Garage {
 
         /**
          * @class OffscreenEditor
-         * @brief pixi.js を使ってリサイズやグレースケール変換等の簡単な画像編集を行う
+         * @brief Canvas 2D を使ってリサイズやグレースケール変換等の簡単な画像編集を行う
          */
         export class OffscreenEditor {
             private imageSrc_: string;
-            private renderer_: PIXI.SystemRenderer;
 
             /**
              * コンストラクター
-             * 
-             * @param 
+             *
+             * @param
              */
-            constructor(imageSrc: string, renderer?: PIXI.SystemRenderer) {
+            constructor(imageSrc: string) {
                 this.imageSrc_ = imageSrc;
-
-                if (renderer) {
-                    this.renderer_ = renderer;
-                } else {
-                    this.renderer_ = PIXI.autoDetectRenderer();
-                }
             }
 
             /**
@@ -132,24 +125,13 @@ module Garage {
                 }
 
                 console.log(TAG + "before editImage src: " + imageSrc);
-                let loadPath = Util.JQueryUtils.encodeUriValidInCSS(imageSrc.replace(/\\/g, "/"));
 
                 // 画像のロード
-                OffscreenEditor.loadTexture(loadPath)
-                    .done((texture: PIXI.Texture) => {
+                OffscreenEditor.loadImage(imageSrc)
+                    .done((image: HTMLImageElement) => {
 
-                        //textureから、画像のデータを取得する。
-                        let imageWidth: number = 800;
-                        let imageHeight: number = 600;
-                        if (params.resize != null) {
-                            imageWidth = params.resize.width;
-                            imageHeight = params.resize.height;
-                        }
-                        var renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer =
-                            PIXI.autoDetectRenderer(imageWidth, imageHeight, { transparent: true });
-                        let imageDataUrl = OffscreenEditor.getDataUrlOfEditedImage(texture, params, renderer);
-                        //画像データを取得したら、不要なrendererは削除する。
-                        renderer.destroy(true);
+                        //画像から、編集後の画像のデータを取得する。
+                        let imageDataUrl = OffscreenEditor.getDataUrlOfEditedImage(image, params);
 
                         // 出力先のパスが指定されている場合は、ファイル出力を行う
                         if (dstPath) {
@@ -159,7 +141,7 @@ module Garage {
                             }
 
                             // Buffer オブジェクトを使用して、base64 デコーディング
-                            let buffer = new Buffer(imageDataUrl.split("base64,")[1], "base64");
+                            let buffer = Buffer.from(imageDataUrl.split("base64,")[1], "base64");
 
                             // imageType と指定したパスの拡張子が合わない場合は補正する。
                             dstPath = OffscreenEditor.getEditResultPath(dstPath, params.imageType);
@@ -182,7 +164,7 @@ module Garage {
                         }
                     })
                     .fail(() => {
-                        console.error(FUNCTION_NAME + "error occur in loadTexture");
+                        console.error(FUNCTION_NAME + "error occur in loadImage");
                         df.reject();
                     });
 
@@ -242,39 +224,34 @@ module Garage {
             }
 
             /**
-             * 画像を読み込み、PIXI.js のテクスチャーを取得する
-             * 
-             * @param src {string} テクスチャーを取得する画像のパス
-             * @return {IPromise<PIXI.Texture>} 読み込んだテクスチャーの promise オブジェクト
+             * 画像ファイルを読み込み、HTMLImageElement を取得する。
+             * file:// の画像を直接 canvas に描画すると canvas が汚染 (tainted) され toDataURL できないため、
+             * ファイルの内容から Blob URL を作成して読み込む。
+             *
+             * @param srcFilePath {string} 読み込む画像ファイルのパス
+             * @return {IPromise<HTMLImageElement>} 読み込んだ画像の promise オブジェクト
              */
-            public static loadTexture(src: string): IPromise<PIXI.Texture> {
-                let FUNCTION_NAME = TAG + "loadTexture : ";
+            public static loadImage(srcFilePath: string): IPromise<HTMLImageElement> {
+                let FUNCTION_NAME = TAG + "loadImage : ";
                 let df = $.Deferred();
-                let promise: IPromise<PIXI.Texture> = CDP.makePromise(df);
+                let promise: IPromise<HTMLImageElement> = CDP.makePromise(df);
 
-                if (null == src) {
-                    df.resolve(PIXI.Texture.EMPTY);
-                } else {
-                    try {
-                        let pixiCache: PIXI.Texture = PIXI.utils.TextureCache[src];
-                        if (pixiCache) {
-                            pixiCache.destroy(true);
-                        }
-                        PIXI.Texture.removeTextureFromCache(src);
-
-                        let texture = PIXI.Texture.fromImage(src);
-                        if (texture.baseTexture && texture.baseTexture.hasLoaded) {
-                            df.resolve(texture);
-                        } else {
-                            let onLoad = () => {
-                                df.resolve(texture);
-                            };
-                            texture.once("update", onLoad);
-                        }
-                    } catch (err) {
-                        console.error(FUNCTION_NAME + err);
-                        df.reject();
-                    }
+                try {
+                    let blobUrl = URL.createObjectURL(new Blob([fs.readFileSync(srcFilePath)]));
+                    let image = new Image();
+                    image.onload = () => {
+                        URL.revokeObjectURL(blobUrl);
+                        df.resolve(image);
+                    };
+                    image.onerror = (err) => {
+                        URL.revokeObjectURL(blobUrl);
+                        console.error(FUNCTION_NAME + "failed to decode " + srcFilePath);
+                        df.reject(err);
+                    };
+                    image.src = blobUrl;
+                } catch (err) {
+                    console.error(FUNCTION_NAME + err);
+                    df.reject();
                 }
 
                 return promise;
@@ -283,29 +260,34 @@ module Garage {
             /**
              * 編集後の画像のData URLを取得する
              */
-            private static getDataUrlOfEditedImage(texture: PIXI.Texture, params: IImageEditParams, renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer): string {
-                let stage = new PIXI.Container();
-                let sprite = new PIXI.Sprite(texture);
+            private static getDataUrlOfEditedImage(image: HTMLImageElement, params: IImageEditParams): string {
+                // 出力先の canvas。リサイズ指定がない場合は 800x600 (旧 pixi.js 実装の既定サイズ)
+                let canvas = document.createElement("canvas");
+                canvas.width = 800;
+                canvas.height = 600;
+                if (params.resize != null) {
+                    canvas.width = params.resize.width;
+                    canvas.height = params.resize.height;
+                }
+
+                // 描画位置とサイズ。リサイズ指定がない場合は原寸で左上に描画する
+                let drawArea: IArea = { x: 0, y: 0, w: image.naturalWidth, h: image.naturalHeight };
 
                 // リサイズの実行
                 if (params.resize) {
-                    this._resizeImage(texture, params.resize, sprite, renderer);
+                    drawArea = this._resizeImage(image, params.resize, canvas);
                 }
 
-                let filters: PIXI.AbstractFilter[] = [];
+                let context = canvas.getContext("2d");
+                context.imageSmoothingEnabled = true;
+                context.imageSmoothingQuality = "high";
+
                 // グレースケール化
                 if (!_.isUndefined(params.grayscale)) {
-                    let grayScaleFilter = new PIXI.filters.GrayFilter();
-                    grayScaleFilter.gray = params.grayscale;
-                    filters.push(grayScaleFilter);
+                    context.filter = "grayscale(" + params.grayscale + ")";
                 }
 
-                if (0 < filters.length) {
-                    sprite.filters = filters;
-                }
-
-                stage.addChild(sprite);
-                renderer.render(stage);
+                context.drawImage(image, drawArea.x, drawArea.y, drawArea.w, drawArea.h);
 
                 // 出力する画像の mimeType 設定。
                 // デフォルトは image/png。他に image/jpeg を選択できる。
@@ -313,21 +295,23 @@ module Garage {
                 if (params.imageType && params.imageType === "image/jpeg") {
                     imageType = params.imageType;
                 }
-                // レンダラーの canvas に描画されているグラフィクスを、指定した mimeType の画像の dataUrl として出力
-                let imageDataUrl = renderer.view.toDataURL(imageType);
+                // canvas に描画されているグラフィクスを、指定した mimeType の画像の dataUrl として出力
+                let imageDataUrl = canvas.toDataURL(imageType);
 
                 return imageDataUrl;
             }
 
             /**
-             * 画像のリサイズを行う
+             * 画像のリサイズ後の描画領域を計算する。
+             * contain かつ padding なしの場合は、canvas を縮小後の画像サイズに合わせる。
+             *
+             * @return {IArea} canvas 上の描画領域
              */
-            private static _resizeImage(texture: PIXI.Texture, resize: IImageResizeParams, sprite: PIXI.Sprite, renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer) {
-                if (!texture || !resize || !sprite || !renderer) {
-                    return;
-                }
-                let scaleX = 0 < texture.width ? resize.width / texture.width : 1,
-                    scaleY = 0 < texture.height ? resize.height / texture.height : 1;
+            private static _resizeImage(image: HTMLImageElement, resize: IImageResizeParams, canvas: HTMLCanvasElement): IArea {
+                let imageW = image.naturalWidth,
+                    imageH = image.naturalHeight;
+                let scaleX = 0 < imageW ? resize.width / imageW : 1,
+                    scaleY = 0 < imageH ? resize.height / imageH : 1;
                 let resizeMode = resize.mode ? resize.mode : ImageResizeMode.DEFAULT;
 
                 switch (resizeMode) {
@@ -338,37 +322,32 @@ module Garage {
                             if (1 < scale && !resize.force) {
                                 scale = 1;
                             }
-                            sprite.scale.set(scale);
 
-                            let scaledW = texture.width * scale,
-                                scaledH = texture.height * scale;
+                            let scaledW = imageW * scale,
+                                scaledH = imageH * scale;
                             if (resize.padding) {
-                                let anchorX = - (resize.width - scaledW) / scaledW / 2,
-                                    anchorY = - (resize.height - scaledH) / scaledH / 2;
-                                sprite.anchor.set(anchorX, anchorY);
+                                // 余白を維持して中央に配置
+                                return { x: (resize.width - scaledW) / 2, y: (resize.height - scaledH) / 2, w: scaledW, h: scaledH };
                             } else {
-                                renderer.resize(scaledW, scaledH);
+                                canvas.width = scaledW;
+                                canvas.height = scaledH;
+                                return { x: 0, y: 0, w: scaledW, h: scaledH };
                             }
                         }
-                        break;
                     case ImageResizeMode.COVER:
                         {
-                            // scale は X, Y の小さい方を採用する
+                            // scale は X, Y の大きい方を採用し、はみ出した部分は中央基準で切り取る
                             let scale = scaleX < scaleY ? scaleY : scaleX;
-                            sprite.scale.set(scale);
 
-                            let scaledW = texture.width * scale,
-                                scaledH = texture.height * scale;
-                            let anchorX = - (resize.width - scaledW) / scaledW / 2,
-                                anchorY = - (resize.height - scaledH) / scaledH / 2;
-                            sprite.anchor.set(anchorX, anchorY);
+                            let scaledW = imageW * scale,
+                                scaledH = imageH * scale;
+                            return { x: (resize.width - scaledW) / 2, y: (resize.height - scaledH) / 2, w: scaledW, h: scaledH };
                         }
-                        break;
 
                     // stretch
                     default:
                         {
-                            sprite.scale.set(scaleX, scaleY);
+                            return { x: 0, y: 0, w: imageW * scaleX, h: imageH * scaleY };
                         }
                 }
             }

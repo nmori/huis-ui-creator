@@ -16,8 +16,8 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
         export class RemoteId implements IRemoteId{
             private remoteId_: string;
 

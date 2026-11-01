@@ -16,9 +16,9 @@
 
 /// <reference path="../../include/interfaces.d.ts" />
 
-module Garage {
-    export module View {
-        export module Dialog {
+namespace Garage {
+    export namespace View {
+        export namespace Dialog {
             import Framework = CDP.Framework;
 
             export enum UnconnectedDialogType {

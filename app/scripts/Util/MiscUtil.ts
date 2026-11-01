@@ -16,8 +16,8 @@
 
 /// <referecen path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
 
         var TAGS = {
             MiscUtil: "[Garage.Util.MiscUtil] ",
@@ -180,7 +180,7 @@ module Garage {
              * @param path {string} [in] チェックしたいJPEG/PNGファイル
              */
             static checkFileSize(path: string): number {
-                let s: Stats = null;
+                let s: import("fs").Stats = null;
 
                 try {
                     let fd = fs.openSync(path, 'r');

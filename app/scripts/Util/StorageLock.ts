@@ -1,7 +1,7 @@
 ﻿/// <referecen path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
 
         export class StorageLock {
             /**

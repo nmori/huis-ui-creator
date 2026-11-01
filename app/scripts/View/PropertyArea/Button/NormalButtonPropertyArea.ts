@@ -18,11 +18,11 @@
 
 /* tslint:disable:max-line-length no-string-literal */
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
         import Tools = CDP.Tools;
         import Framework = CDP.Framework;
-        import JQUtils = Util.JQueryUtils;
+        import JQUtils = Garage.Util.JQueryUtils;
 
         var TAG = "[Garage.View.PropertyArea.Button.NormalButtonPropertyArea] ";
 
@@ -139,7 +139,7 @@ module Garage {
             //deleteボタンが押されたときに呼ばれる
             private onDeleteButtonClick(event: Event) {
                 let FUNCTION_NAME = TAG + "onDeleteButtonClick";
-                let $target = $(event.currentTarget);
+                let $target = $(event.currentTarget as HTMLElement);
                 let order = this.getOrderFrom($target);
 
                 if (!this.isValidOrder(order)) {
@@ -155,7 +155,7 @@ module Garage {
             private onPlusBtnClick(event: Event) {
                 let FUNCTION_NAME = TAG + "onPlusBtnClick : ";
 
-                let $target = $(event.currentTarget);
+                let $target = $(event.currentTarget as HTMLElement);
                 if ($target.hasClass("disabled")) {
                     return;
                 }
@@ -210,7 +210,7 @@ module Garage {
             private onActionPullDownListChanged(event: Event) {
                 let FUNCTION_NAME = TAG + "onActionPullDownListChanged";
 
-                let $target = $(event.currentTarget);
+                let $target = $(event.currentTarget as HTMLElement);
                 if (!Util.JQueryUtils.isValidJQueryElement($target)) {
                     console.warn(FUNCTION_NAME + "$target is invalid");
                     return;
@@ -224,7 +224,7 @@ module Garage {
             //リモコン選択用のプルダウンが変更されたときに呼ばれる
             private onRemotePullDownListChanged(event: Event) {
                 let FUNCTION_NAME = TAG + "onRemotePullDownListChanged";
-                let $target = $(event.currentTarget);
+                let $target = $(event.currentTarget as HTMLElement);
                 let remoteId = $target.val();
 
                 //remoteIdがない場合、処理を終了する。
@@ -232,8 +232,8 @@ module Garage {
                     return;
                 }
 
-                if ($("#select-remote-input-0 option").val().match(/[0-9]+-[0-9]+-[0-9]+-[0-9]+-[0-9]+/)
-                    || $("#select-remote-input-0 option").val().match(UNKNOWN_REMOTE)) {
+                if (($("#select-remote-input-0 option").val() as string).match(/[0-9]+-[0-9]+-[0-9]+-[0-9]+-[0-9]+/)
+                    || ($("#select-remote-input-0 option").val() as string).match(UNKNOWN_REMOTE)) {
                     $('#select-remote-input-0-menu li:first-child').remove();
                 }
 
@@ -261,7 +261,7 @@ module Garage {
                 let FUNCTION_NAME = TAG + "onFunctionPullDownListChanged";
                 this.updateModel(this.getModel().getDefaultStateId());
 
-                let $target = $(event.currentTarget);
+                let $target = $(event.currentTarget as HTMLElement);
                 //noneのoptionをもっていたとき,noneの選択肢を消す。
                 if ($target.find(".default-value").length != 0) {
                     this.renderSignals();
@@ -279,7 +279,7 @@ module Garage {
              * モデルをレンダリングする。
              * @return {Backbone.View<Model.Item>}
              */
-            render(): Backbone.View<Model.Item> {
+            render(): this {
                 super.render();
                 let FUNCTION_NAME = TAG + "renderViewState";
 
@@ -815,7 +815,7 @@ module Garage {
                     return;
                 }
 
-                let inputType: string = $actionPullDown.val();
+                let inputType: string = ($actionPullDown.val() as string);
 
                 //"none"も見つからない扱いとする。
                 if (!Util.JQueryUtils.isValidValue(inputType)) {

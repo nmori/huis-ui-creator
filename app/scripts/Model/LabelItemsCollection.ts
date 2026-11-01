@@ -17,8 +17,8 @@
 /// <reference path="../include/interfaces.d.ts" />
 /// <reference path="LabelItem.ts" />
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
         var TAG = "[Garage.Model.LabelItemsCollection] ";
 
         export class LabelItemsCollection extends Backbone.Collection<LabelItem> {

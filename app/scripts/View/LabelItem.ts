@@ -16,10 +16,10 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
         import Tools = CDP.Tools;
-        import JQUtils = Util.JQueryUtils;
+        import JQUtils = Garage.Util.JQueryUtils;
         var TAG = "[Garage.View.LabelItem] ";
 
         export class LabelItem extends Backbone.View<Model.LabelItem> {
@@ -33,6 +33,7 @@ module Garage {
                 super(options);
             }
 
+            // @ts-expect-error Backbone は events をメソッドでも受け付ける (型定義上はプロパティ)
             events() {
                 // Please add events
                 return {
@@ -70,7 +71,7 @@ module Garage {
                 this.labelItemTemplate_ = Tools.Template.getJST("#template-label-item", templateFile);
             }
 
-            render(): View.LabelItem {
+            render(): this {
                 this.collection.each((item: Model.LabelItem, index: number) => {
                     this.$el.append($(this.labelItemTemplate_(item)));
                     

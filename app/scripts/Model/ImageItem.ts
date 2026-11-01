@@ -19,10 +19,10 @@
 
 /* tslint:disable:max-line-length */
 
-module Garage {
-    export module Model {
+namespace Garage {
+    export namespace Model {
         var TAG = "[Garage.Model.ImageItem] ";
-        import JQUtils = Util.JQueryUtils;
+        import JQUtils = Garage.Util.JQueryUtils;
 
         export namespace ImageResizeMode {
             export const CONTAIN: string = "contain";

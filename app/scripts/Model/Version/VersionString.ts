@@ -17,10 +17,10 @@
 /// <reference path="../../include/interfaces.d.ts" />
 
 
-module Garage {
-    export module Model {
-        export module Version {
-            import JQUtils = Util.JQueryUtils;
+namespace Garage {
+    export namespace Model {
+        export namespace Version {
+            import JQUtils = Garage.Util.JQueryUtils;
             var TAG = "[Garage.Model.VersionString] ";
 
             export class VersionString {

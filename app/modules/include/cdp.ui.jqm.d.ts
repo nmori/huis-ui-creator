@@ -4,7 +4,6 @@
  *
  * Date: 2015-11-27T17:22:17
  */
-/// <reference path="jquery.d.ts" />
 /// <reference path="jquery.mobile.d.ts" />
 /// <reference path="cdp.framework.jqm.d.ts" />
 /// <reference path="cdp.tools.d.ts" />
@@ -16,7 +15,7 @@ declare namespace CDP {
          * @brief Android SDK の Toast クラスのように自動消滅するメッセージ出力ユーティリティ
          *        入れ子の関係を実現するために module で実装
          */
-        module Toast {
+        namespace Toast {
             let LENGTH_SHORT: number;
             let LENGTH_LONG: number;
             enum OffsetX {

@@ -18,11 +18,11 @@
 
 /* tslint:disable:max-line-length no-string-literal */
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
         import Tools = CDP.Tools;
         import Framework = CDP.Framework;
-        import JQUtils = Util.JQueryUtils;
+        import JQUtils = Garage.Util.JQueryUtils;
 
         var TAG = "[Garage.View.PropertyArea.Button.ButtonPropertyArea] ";
 
@@ -178,7 +178,7 @@ module Garage {
             protected onHoverInSignalContainer(event: Event) {
                 let FUNCTION_NAME = TAG + "onHoverInSignalContainer";
 
-                let $target = $(event.currentTarget).find(".signal-control-button");
+                let $target = $(event.currentTarget as HTMLElement).find(".signal-control-button");
                 if (Util.JQueryUtils.isValidJQueryElement($target)) {
                     $target.css("opacity", "1");
                 }
@@ -188,7 +188,7 @@ module Garage {
             protected onHoverOutSignalContainer(event: Event) {
                 let FUNCTION_NAME = TAG + "onHoverOutSignalContainer";
 
-                let $target = $(event.currentTarget).find(".signal-control-button");
+                let $target = $(event.currentTarget as HTMLElement).find(".signal-control-button");
                 if (Util.JQueryUtils.isValidJQueryElement($target)) {
                     $target.css("opacity", "0");
                 }
@@ -335,7 +335,7 @@ module Garage {
                     console.warn(FUNCTION_NAME + "$remotePullDown is invalid");
                     return;
                 }
-                remoteId = $remotePullDown.val();
+                remoteId = ($remotePullDown.val() as string);
 
                 //"none"も見つからない扱いとする。
                 if (!Util.JQueryUtils.isValidValue(remoteId)) {
@@ -736,7 +736,7 @@ module Garage {
                     return;
                 }
 
-                functionName = $functionPullDown.val();
+                functionName = ($functionPullDown.val() as string);
 
                 if (!Util.JQueryUtils.isValidValue(functionName)) {
                     return undefined;
@@ -1113,7 +1113,7 @@ module Garage {
                     console.warn(FUNCTION_NAME + "$pagePullDown is invalid");
                     return;
                 }
-                return $pagePullDown.val();
+                return ($pagePullDown.val() as any);
             }
 
             /**

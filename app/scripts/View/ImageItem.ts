@@ -16,8 +16,8 @@
 
 /// <reference path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
         import Tools = CDP.Tools;
         var TAG = "[Garage.View.ImageItem] ";
 
@@ -33,6 +33,7 @@ module Garage {
                 super(options);
             }
 
+            // @ts-expect-error Backbone は events をメソッドでも受け付ける (型定義上はプロパティ)
             events() {
                 // Please add events
                 return {
@@ -81,7 +82,7 @@ module Garage {
             /**
              * ImageItem Collection をレンダリングする
              */
-            render(): View.ImageItem {
+            render(): this {
                 this.collection.each((item: Model.ImageItem, index: number) => {
                     let image: Model.ImageItem = $.extend(true, {}, item);
                     if (this.remoteId_ != "common") {

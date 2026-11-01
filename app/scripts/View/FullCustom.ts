@@ -17,13 +17,13 @@
 /// <reference path="../include/interfaces.d.ts" />
 /// <reference path="FullCustomCommand.ts" />
 /// <reference path="BasePage.ts" />
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
 
         import Framework = CDP.Framework;
         import UI = CDP.UI;
         import Tools = CDP.Tools;
-        import JQUtils = Util.JQueryUtils;
+        import JQUtils = Garage.Util.JQueryUtils;
 
         var TAG: string = "[Garage.View.FullCustom] ";
         var HUIS_FILES_DIRECTORY = "app/res/samples/materials";
@@ -133,6 +133,7 @@ module Garage {
 
             onPageShow(event: JQueryEventObject, data?: Framework.ShowEventData) {
                 requirejs(["garage.view.fullcustomcommand"], () => {
+                    ClassCompat.apply();
 
                     super.onPageShow(event, data);
                     this.propertyArea_ = null;
@@ -160,7 +161,7 @@ module Garage {
                     this.faceRenderer_canvas_.render();
 
                     // [TODO] Canvas 内の page scroll
-                    $("#face-canvas-area").find("#face-pages-area").scroll((event: JQueryEventObject) => {
+                    $("#face-canvas-area").find("#face-pages-area").scroll((event: JQuery.TriggeredEvent) => {
                         this.onCanvasPageScrolled(event);
                     });
 
@@ -300,7 +301,7 @@ module Garage {
                 this.showOptionPullDownMenu($popup);
             }
 
-            render(): FullCustom {
+            render(): this {
                 // Please add your code
                 return this;
             }
@@ -461,7 +462,7 @@ module Garage {
                 var $faceItemList = $("#face-item-list");
 
                 $faceItem.on(Events.CLICK, (event: JQueryEventObject) => {
-                    this._onFaceItemSelected($(event.currentTarget));
+                    this._onFaceItemSelected($(event.currentTarget as HTMLElement));
                 });
 
                 // face list のスクロール (左方向)
@@ -679,7 +680,7 @@ module Garage {
 
                 this._pageLayout();
                 //スクロールイベント
-                $facePallet.find("#face-pages-area").scroll((event: JQueryEventObject) => {
+                $facePallet.find("#face-pages-area").scroll((event: JQuery.TriggeredEvent) => {
                     this.onPalletPageScrolled(event);
                 });
 
@@ -847,7 +848,7 @@ module Garage {
                 // 現在のターゲットを外す
                 this._loseTarget();
 
-                let item = $(event.currentTarget);
+                let item = $(event.currentTarget as HTMLElement);
                 let newItem: ItemModel = this.setPalletItemOnCanvas(item, this.faceRenderer_pallet_, this.getPointFromCanvas({ x: item.offset().left, y: item.offset().top }));
                 if (!newItem) {
                     console.error("Failed to add the pallet item to the canvas.");
@@ -873,7 +874,7 @@ module Garage {
              */
             private countPalletItemClick(event: Event) {
                 if (event.type === "mousedown") {
-                    let currentTarget: JQuery = $(event.currentTarget);
+                    let currentTarget: JQuery = $(event.currentTarget as HTMLElement);
                     if (!this.clickedPalletItem ||                                                              // クリック対象未設定 または
                         JQUtils.data(this.clickedPalletItem, "cid") !== JQUtils.data(currentTarget, "cid")) {   // 直前のクリックと対象が異なる場合
                         // ダブルクリック判定を初期化して開始
@@ -1232,7 +1233,7 @@ module Garage {
                 //マウスがWindowSizeよりはみ出していた場合、フォーカスを外す
                 if (event.pageX < 0 + MARGIN_MOUSEMOVABLE_LEFT || event.pageX > innerWidth - MARGIN_MOUSEMOVABLE_RIGHT
                     || event.pageY < 0 + MARGIN_MOUSEMOVALBE_TOP || event.pageY > innerHeight - MARGIN_MOUSEMOVALBE_BOTTOM) {
-                    event.type = "mouseup";
+                    (<any>event).type = "mouseup"; // jQuery.Event の type は書き換え可能
                     this.delayedContextMenuEvent = null;
                     this.onMainMouseUp(event);
                     return;
@@ -1724,9 +1725,9 @@ module Garage {
             /**
              * キャンバス内のスクロールイベントのハンドリング
              */
-            private onCanvasPageScrolled(event: Event) {
+            private onCanvasPageScrolled(event: JQuery.TriggeredEvent) {
 
-                var $target: JQuery = $(event.currentTarget);
+                var $target: JQuery = $(event.currentTarget as HTMLElement);
                 var $children = $target.children();
 
                 var scaledFaceHeight = HUIS_FACE_PAGE_HEIGHT / 2;
@@ -1743,8 +1744,8 @@ module Garage {
             /**
              * パレット内のスクロールイベントのハンドリング
              */
-            private onPalletPageScrolled(event: Event) {
-                var $target: JQuery = $(event.currentTarget);
+            private onPalletPageScrolled(event: JQuery.TriggeredEvent) {
+                var $target: JQuery = $(event.currentTarget as HTMLElement);
                 var scrollTop: number = $target.scrollTop();
                 this.displayGradationInPalletArea(scrollTop, $target);
             }
@@ -1818,7 +1819,7 @@ module Garage {
              * キャンバス内のボタンアイテムがHoverされたときのハンドリング
              */
             private onHoverButtonItemInCanvas(event: Event) {
-                var $target = $(event.currentTarget);//Jquery
+                var $target = $(event.currentTarget as HTMLElement);//Jquery
 
                 this.showButtonInfoTooltip($target);
             }
@@ -1839,7 +1840,7 @@ module Garage {
                     y: event.pageY
                 };
                 let $tooltip: JQuery = $("#canvas-tooltip");
-                var $target = $(event.currentTarget);//Jquery
+                var $target = $(event.currentTarget as HTMLElement);//Jquery
                 if (!this.isMousePositionOn($tooltip, mousePosition)) {
 
                     //tooltipを非表示にする。
@@ -2152,7 +2153,7 @@ module Garage {
             * リモコン名のテキストフィールドの値が変わったときに呼び出される
             */
             private onRemoteNameTextFieldChanged(event: Event) {
-                var $target = $(event.currentTarget);
+                var $target = $(event.currentTarget as HTMLElement);
                 var value: any = $target.val();
                 //禁則文字がある場合、表示を取り消す。
                 let filteredString: string = Util.MiscUtil.getRemovedInhibitionWords(value);
@@ -2199,7 +2200,7 @@ module Garage {
             private onRemoteNameTextFieldClicked(event: Event) {
                 //リモコン名編集するときには、ほかのターゲットをはずす。
                 this._loseTarget();
-                $(event.currentTarget).focus();
+                $(event.currentTarget as HTMLElement).focus();
             }
 
             /**
@@ -2229,7 +2230,7 @@ module Garage {
 
                 let modules = this.faceRenderer_canvas_.getModules((area) => { return !this.isCompletelyOutOfCanvas(area); });
                 let remoteId = this.currentFace_.remoteId;
-                let faceName: string = $("#input-face-name").val();
+                let faceName: string = ($("#input-face-name").val() as string);
 
                 let dialogProps = DIALOG_PROPS_CREATE_NEW_REMOTE;
 
@@ -2295,7 +2296,7 @@ module Garage {
                 var options: Util.ElectronMessageBoxOptions = {
                 };
 
-                let faceName: string = $("#input-face-name").val();
+                let faceName: string = ($("#input-face-name").val() as string);
 
                 //名前がない場合のエラー
                 if (!faceName) {
@@ -2330,6 +2331,36 @@ module Garage {
                     this._showSaveErrorDialog(multipleBluetoothDevError);
                     return true;
                 }
+
+                // ジャンプボタンに対応していない古い本体へは保存させない
+                // (エクスポートファイルは新しい本体でインポートされる可能性があるため対象外)
+                if (!isForExport && !Util.VersionManager.isJumpSupported() && this._jumpButtonExists()) {
+                    this._showSaveErrorDialog($.i18n.t("dialog.message.STR_DIALOG_MESSAGE_WARN_JUMP_NOT_SUPPORTED"));
+                    return true;
+                }
+            }
+
+            /**
+             * キャンバス上にジャンプボタンが存在するかどうか
+             */
+            private _jumpButtonExists(): boolean {
+                let pageCount = this.faceRenderer_canvas_.getPageCount();
+                for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+                    let pageModuleId = this._getCanvasPageModuleId(pageIndex);
+                    if (!pageModuleId) {
+                        continue;
+                    }
+                    let buttons = this.faceRenderer_canvas_.getButtons(pageModuleId);
+                    if (!buttons) {
+                        continue;
+                    }
+                    for (let button of buttons) {
+                        if (button.enabled && button.isJumpButton()) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
 
             /**
@@ -2544,7 +2575,7 @@ module Garage {
                                     }
 
                                     // state id は重複することはないが、もし複数の state が見つかった場合は、最初の state をターゲットとする
-                                    var $targetStateElem = $target.find(".button-state").filter((index: number, elem: Element) => {
+                                    var $targetStateElem = $target.find(".button-state").filter((index: number, elem: HTMLElement) => {
                                         return parseInt(JQUtils.data($(elem), "stateId"), 10) === stateId;
                                     });
                                     if (!$targetStateElem || $targetStateElem.length < 1) {
@@ -3058,12 +3089,12 @@ module Garage {
                 $('#face-canvas .module-container').each((index, elm) => {
                     let canvasModuleId = JQUtils.data($(elm), "cid");
                     if (!canvasModuleId) {
-                        return true; // JQuery.each()でのcontinue
+                        return; // JQuery.each()でのcontinue
                     }
 
                     let tmpButtons: Model.ButtonItem[] = this.faceRenderer_canvas_.getButtons(canvasModuleId);
                     if (!tmpButtons) {
-                        return true;
+                        return;
                     }
 
                     if (currentCanvasId != hoverCanvasId && canvasModuleId == hoverCanvasId) {
@@ -3662,7 +3693,7 @@ module Garage {
                         item,
                         this.currentFace_.remoteId,
                         this.commandManager_,
-                        $("#input-face-name").val(),
+                        ($("#input-face-name").val() as string),
                         this.faceRenderer_canvas_.getModules()
                     );
                     this.listenTo(item, Events.CHANGE, this._updateElementsOnCanvasProperyAreaChanged);

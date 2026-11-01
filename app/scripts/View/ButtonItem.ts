@@ -18,10 +18,10 @@
 
 /* tslint:disable:max-line-length no-string-literal */
 
-module Garage {
-    export module View {
+namespace Garage {
+    export namespace View {
         import Tools = CDP.Tools;
-        import JQUtils = Util.JQueryUtils;
+        import JQUtils = Garage.Util.JQueryUtils;
         var TAG = "[Garage.View.ButtonItem] ";
 
         export class ButtonItem extends Backbone.View<Model.ButtonItem> {
@@ -91,9 +91,12 @@ module Garage {
                 var templateFile = CDP.Framework.toUrl("/templates/face-items.html");
                 this.buttonItemTemplate_ = Tools.Template.getJST("#template-button-item", templateFile);
 
-                super(options);
+                // options の解析後に初期化し直す。
+                // (class では super() を 2 回呼べないため、Backbone.View のコンストラクター関数を直接呼ぶ)
+                (<any>Backbone.View).call(this, options);
             }
 
+            // @ts-expect-error Backbone は events をメソッドでも受け付ける (型定義上はプロパティ)
             events() {
                 // Please add events
                 return {
@@ -130,7 +133,7 @@ module Garage {
                 return true;
             }
 
-            render(): View.ButtonItem {
+            render(): this {
                 this.collection.each((model: Model.ButtonItem) => {
                     this._modifyModel(model);
                     let filtered_state = null;

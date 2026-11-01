@@ -16,8 +16,8 @@
 
 /// <referecen path="../include/interfaces.d.ts" />
 
-module Garage {
-    export module Util {
+namespace Garage {
+    export namespace Util {
 
         namespace ConstValue {
             export const THEME_DIR_NAME: string = "theme";
